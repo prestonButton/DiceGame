@@ -1,9 +1,14 @@
 import React from "react";
+import "../tailwind.css";
+import "./home.css";
+import SpinningDice from "../components/spinningDice";
 
-export default function Home() {
+const Homepage = () => {
   return (
-    <div>
-      <h1>Home</h1>
+    <div className="container mx-auto px-4">
+      <SpinningDice />
     </div>
   );
-}
+};
+
+export default Homepage;
