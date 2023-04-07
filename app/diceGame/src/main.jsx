@@ -1,6 +1,6 @@
 // src/main.jsx
 import React from "react";
-import ReactDOM from "react-dom"; // Update the import statement
+import ReactDOM from "react-dom/client"; // Update the import statement
 import App from "./App";
 import "./tailwind.css";
 
