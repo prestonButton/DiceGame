@@ -49,7 +49,7 @@ const AuthForm = ({ type }) => {
             </p>
           ) : (
             <p className="mb-10">
-              Already a user?
+              Already a user?{" "}
               <Link to="/login" className="text-fuchsia-300">
                 Login
               </Link>
