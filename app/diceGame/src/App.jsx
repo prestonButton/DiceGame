@@ -7,8 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/home";
 import Game from "./pages/game";
 import Account from "./pages/account";
-import Login from "./pages/login";
-import Signup from "./pages/signup";
+import AuthForm from "./components/AuthForm";
 
 function App() {
   return (
@@ -17,8 +16,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/game/:gameId" element={<Game />} />
         <Route path="/account" element={<Account />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<AuthForm type='login'/>} />
+        <Route path="/signup" element={<AuthForm type='signup'/>} />
       </Routes>
     </Router>
   );
