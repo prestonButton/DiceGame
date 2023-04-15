@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const AuthForm = ({ type }) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   return (
@@ -15,12 +15,12 @@ const AuthForm = ({ type }) => {
             <h2 className="text-center pt-12 text-3xl">Sign Up</h2>
           )}
           <div>
-            <label htmlFor="">Email: </label>
+            <label htmlFor="">Username: </label>
             <br />
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="p-2 mt-2 w-[300px] input-form text-white rounded-lg"
             />
           </div>
@@ -38,7 +38,7 @@ const AuthForm = ({ type }) => {
             type="submit"
             className="py-2 px-4 bg-white text-blue-600 font-semibold rounded-md mt-3 mb-3"
           >
-            Login
+           {type ==='login' ? 'Login' : 'Sign Up'} 
           </button>
           {type === "login" ? (
             <p className="mb-10">
