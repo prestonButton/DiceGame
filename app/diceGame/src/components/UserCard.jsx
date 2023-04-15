@@ -9,11 +9,11 @@ const UserCard = ({ isFriend }) => {
       <p className="text-lg  font-semibold ">Hugh Jackman</p>
       {isFriend ? (
         <button className="text-xs m-2 py-1 px-4 bg-white text-blue-600 font-semibold rounded-md flex items-center gap-1">
-          <span className="text-xl">-</span> Remove Friend
+          <span className="text-xl">➖</span> Remove Friend
         </button>
       ) : (
         <button className="text-xs m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md">
-          <span className="text-xl">+</span> Add Friend
+          <span className="text-xl">➕</span> Add Friend
         </button>
       )}
     </div>
