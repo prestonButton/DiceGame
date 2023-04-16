@@ -1,15 +1,18 @@
-const express = require("express");
+
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import mongoose from "mongoose";
+
 import userRoutes from "./routes/userRoutes.js";
 import gameRoutes from "./routes/gameRoutes.js";
+
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
+
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
