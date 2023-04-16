@@ -38,19 +38,25 @@ const AuthForm = (props) => {
             type="submit"
             className="py-2 px-4 bg-white text-blue-600 font-semibold rounded-md mt-3 mb-3"
           >
-           {props.type ==='login' ? 'Login' : 'Sign Up'} 
+            {props.type === "login" ? "Login" : "Sign Up"}
           </button>
           {props.type === "login" ? (
             <p className="mb-10">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-fuchsia-300">
+              <Link
+                to="/signup"
+                className="text-fuchsia-300  text-decoration: underline"
+              >
                 Sign Up
               </Link>
             </p>
           ) : (
             <p className="mb-10">
               Already a user?{" "}
-              <Link to="/login" className="text-fuchsia-300">
+              <Link
+                to="/login"
+                className="text-fuchsia-300  text-decoration: underline"
+              >
                 Login
               </Link>
             </p>
