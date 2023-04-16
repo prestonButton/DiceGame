@@ -1,11 +1,10 @@
-
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import mongoose from "mongoose";
 
 import userRoutes from "./routes/userRoutes.js";
-import gameRoutes from "./routes/gameRoutes.js/index.js";
+import gameRoutes from "./routes/gameRoutes.js";
 
 import dotenv from "dotenv";
 
