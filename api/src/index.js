@@ -1,11 +1,13 @@
 const express = require("express");
-const helmet = require("helmet");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes");
-const gameRoutes = require("./routes/gameRoutes");
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import mongoose from "mongoose";
+import userRoutes from "./routes/userRoutes.js";
+import gameRoutes from "./routes/gameRoutes.js";
+import dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config();
 
 const app = express();
 app.use(helmet());
