@@ -24,7 +24,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/games", gameRoutes);
 
 const httpServer = http.createServer(app);
-const io = new Server(httpServer, {
+export const io = new Server(httpServer, {
   cors: {
     origin: "*", // Replace this with the URL of your front-end (e.g., "http://localhost:3000")
   },
