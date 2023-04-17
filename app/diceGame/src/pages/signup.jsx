@@ -1,5 +1,5 @@
 import react from 'react'
-import AuthForm from "../components/AuthForm";
+import RegisterForm from '../components/RegisterForm';
 
 
 
@@ -7,7 +7,9 @@ const Signup = () => {
     
     return (
       <div>
-        <AuthForm type="signup" />
+        <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 flex items-center justify-center text-white">
+          <RegisterForm />
+        </div>
       </div>
     );
 }
