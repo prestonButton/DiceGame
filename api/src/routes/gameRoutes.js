@@ -1,223 +1,184 @@
-import { Router } from 'express';
-import Game from '../models/Game.js';
-import User from '../models/User.js';
+import Game from "../models/Game.js";
+import User from "../models/User.js";
+import { io } from "../index.js";
 
-const router = Router();
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-// Create a new game
-router.post("/", async (req, res) => {
-  try {
-    // Assume the user ID is provided in the request body
-    const user = await User.findById(req.body.userId);
+  // Create a new game
+  socket.on("CREATE_GAME", async (data, callback) => {
+    try {
+      const user = await User.findById(data.userId);
+      if (!user) {
+        return callback({ status: 400, message: "Invalid user ID" });
+      }
 
-    // Check if the user exists
-    if (!user) {
-      return res.status(400).json({ message: "Invalid user ID" });
+      const newGame = new Game({
+        players: [user._id],
+        scores: [{ playerId: user._id, score: 0 }],
+        currentPlayerId: user._id,
+      });
+
+      await newGame.save();
+      callback({
+        status: 201,
+        message: "New game created",
+        gameId: newGame._id,
+      });
+    } catch (error) {
+      callback({ status: 500, message: "Server error during game creation." });
     }
+  });
 
-    // Create a new Game instance
-    const newGame = new Game({
-      players: [user._id],
-      scores: [{ playerId: user._id, score: 0 }],
-      currentPlayerId: user._id,
-    });
+  // Join an existing game
+  socket.on("JOIN_GAME", async (data, callback) => {
+    try {
+      const game = await Game.findById(data.gameId);
+      const user = await User.findById(data.userId);
 
-    // Save the new game to the database
-    await newGame.save();
+      if (!game || !user) {
+        return callback({ status: 400, message: "Invalid game or user ID" });
+      }
 
-    res.status(201).json({ message: "New game created", gameId: newGame._id });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during game creation." });
-  }
-});
-
-// Join an existing game
-router.post("/:gameId/join", async (req, res) => {
-  try {
-    const game = await Game.findById(req.params.gameId);
-    const user = await User.findById(req.body.userId);
-
-    // Check if the game and user exist
-    if (!game || !user) {
-      res.status(400).json({ message: "Invalid game or user ID" });
-      return;
-    }
-
-    // Check if the game is already in progress or finished
-    if (game.gameStatus !== "waiting") {
-      res
-        .status(400)
-        .json({
+      if (game.gameStatus !== "waiting") {
+        return callback({
+          status: 400,
           message: "Cannot join. Game is already in progress or finished.",
         });
-      return;
+      }
+
+      if (game.players.includes(user._id)) {
+        return callback({
+          status: 400,
+          message: "User has already joined the game",
+        });
+      }
+
+      game.players.push(user._id);
+      game.scores.push({ playerId: user._id, score: 0 });
+      await game.save();
+
+      callback({
+        status: 200,
+        message: "User joined the game",
+        gameId: game._id,
+      });
+    } catch (error) {
+      callback({
+        status: 500,
+        message: "Server error while joining the game.",
+      });
     }
+  });
 
-    // Check if the user is already in the game
-    if (game.players.includes(user._id)) {
-      res.status(400).json({ message: "User has already joined the game" });
-      return;
-    }
+  // Start the game
+  socket.on("START_GAME", async (data, callback) => {
+    try {
+      const game = await Game.findById(data.gameId);
 
-    // Add the new user to the game's players array
-    game.players.push(user._id);
-    game.scores.push({ playerId: user._id, score: 0 });
+      if (!game) {
+        return callback({ status: 400, message: "Invalid game ID" });
+      }
 
-    // Save the updated game state
-    await game.save();
-    res.status(200).json({ message: "User joined the game", gameId: game._id });
-  } catch (error) {
-    res.status(500).json({ message: "Server error while joining the game." });
-  }
-});
-
-// Start the game
-router.post("/:gameId/start", async (req, res) => {
-  try {
-    const game = await Game.findById(req.params.gameId);
-
-    // Check if the game exists
-    if (!game) {
-      res.status(400).json({ message: "Invalid game ID" });
-      return;
-    }
-
-    // Check if there are at least two players in the game
-    if (game.players.length < 2) {
-      res
-        .status(400)
-        .json({
+      if (game.players.length < 2) {
+        return callback({
+          status: 400,
           message: "A minimum of two players is required to start the game.",
         });
-      return;
+      }
+
+      game.gameStatus = "playing";
+      await game.save();
+
+      callback({ status: 200, message: "Game has started", gameId: game._id });
+    } catch (error) {
+      callback({
+        status: 500,
+        message: "Server error while starting the game.",
+      });
     }
+  });
 
-    // Change the gameStatus to "playing"
-    game.gameStatus = "playing";
+  // Roll the dice and update game state
+  socket.on("ROLL_DICE", async (data, callback) => {
+    try {
+      const game = await Game.findById(data.gameId);
 
-    // Save the updated game state
-    await game.save();
-    res.status(200).json({ message: "Game has started", gameId: game._id });
-  } catch (error) {
-    res.status(500).json({ message: "Server error while starting the game." });
-  }
-});
+      if (!game) {
+        return callback({ status: 400, message: "Invalid game ID" });
+      }
 
-// Retrieve the current game state
-router.get("/:gameId", async (req, res) => {
-  try {
-    const game = await Game.findById(req.params.gameId)
-      .populate("players", "username")
-      .populate("scores.playerId", "username")
-      .populate("currentPlayerId", "username");
+      if (!data.userId || !game.currentPlayerId.equals(data.userId)) {
+        return callback({ status: 403, message: "It's not your turn." });
+      }
 
-    // Check if the game exists
-    if (!game) {
-      res.status(400).json({ message: "Invalid game ID" });
-      return;
-    }
+      const diceRolls = Array.from({ length: 6 }, () =>
+        Math.ceil(Math.random() * 6)
+      );
 
-    res.status(200).json(game);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server error while retrieving the game state." });
-  }
-});
+      // Add the rolled points to the current player's turn score
+      const rolledPoints = diceRolls.reduce((acc, val) => acc + val, 0);
+      game.turnScore += rolledPoints;
+      game.lastRoll = diceRolls;
 
-// Roll the dice and update game state
-router.put("/:gameId/roll", async (req, res) => {
-  try {
-    const game = await Game.findById(req.params.gameId);
+      await game.save();
 
-    // Check if the game exists
-    if (!game) {
-      res.status(400).json({ message: "Invalid game ID" });
-      return;
-    }
-
-    // Check if the user is the current player
-    if (!req.body.userId || !game.currentPlayerId.equals(req.body.userId)) {
-      res.status(403).json({ message: "It's not your turn." });
-      return;
-    }
-
-    // Roll the dice
-    const diceRolls = Array.from({ length: 6 }, () =>
-      Math.ceil(Math.random() * 6)
-    );
-
-    // Add the rolled points to the current player's turn score
-    // (replace this with your game's dice scoring logic)
-    const rolledPoints = diceRolls.reduce((acc, val) => acc + val, 0);
-    game.turnScore += rolledPoints;
-
-    // Update the game's lastRoll with the rolled dice
-    game.lastRoll = diceRolls;
-
-    // Save the updated game state
-    await game.save();
-
-    res
-      .status(200)
-      .json({
+      callback({
+        status: 200,
         message: "Dice rolled",
         gameId: game._id,
         diceRolls,
         rolledPoints,
       });
-  } catch (error) {
-    res.status(500).json({ message: "Server error while rolling the dice." });
-  }
-});
-
-// End the current player's turn and update game state
-router.put("/:gameId/end-turn", async (req, res) => {
-  try {
-    const game = await Game.findById(req.params.gameId);
-
-    // Check if the game exists
-    if (!game) {
-      res.status(400).json({ message: "Invalid game ID" });
-      return;
+    } catch (error) {
+      callback({
+        status: 500,
+        message: "Server error while rolling the dice.",
+      });
     }
+  });
 
-    // Check if the user is the current player
-    if (!req.body.userId || !game.currentPlayerId.equals(req.body.userId)) {
-      res.status(403).json({ message: "It's not your turn." });
-      return;
-    }
+  // End the current player's turn and update game state
+  socket.on("END_TURN", async (data, callback) => {
+    try {
+      const game = await Game.findById(data.gameId);
 
-    // Add the turn score to the current player's total score
-    const currentPlayerScore = game.scores.find((score) =>
-      score.playerId.equals(game.currentPlayerId)
-    );
-    currentPlayerScore.score += game.turnScore;
+      if (!game) {
+        return callback({ status: 400, message: "Invalid game ID" });
+      }
 
-    // Determine the next player's index in the players array
-    const currentPlayerIndex = game.players.findIndex((playerId) =>
-      playerId.equals(game.currentPlayerId)
-    );
-    const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
+      if (!data.userId || !game.currentPlayerId.equals(data.userId)) {
+        return callback({ status: 403, message: "It's not your turn." });
+      }
 
-    // Update the game state for the next player's turn
-    game.currentPlayerId = game.players[nextPlayerIndex];
-    game.turnScore = 0;
-    game.lastRoll = [];
-    game.round += 1;
+      const currentPlayerScore = game.scores.find((score) =>
+        score.playerId.equals(game.currentPlayerId)
+      );
+      currentPlayerScore.score += game.turnScore;
 
-    // Save the updated game state
-    await game.save();
+      const currentPlayerIndex = game.players.findIndex((playerId) =>
+        playerId.equals(game.currentPlayerId)
+      );
+      const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
 
-    res
-      .status(200)
-      .json({
+      game.currentPlayerId = game.players[nextPlayerIndex];
+      game.turnScore = 0;
+      game.lastRoll = [];
+      game.round += 1;
+
+      await game.save();
+
+      callback({
+        status: 200,
         message: "Turn ended. Switching to the next player.",
         gameId: game._id,
       });
-  } catch (error) {
-    res.status(500).json({ message: "Server error while ending the turn." });
-  }
-});
+    } catch (error) {
+      callback({ status: 500, message: "Server error while ending the turn." });
+    }
+  });
 
-export default router;
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});

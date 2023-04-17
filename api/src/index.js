@@ -6,7 +6,7 @@ import http from "http";
 import { Server } from "socket.io";
 
 import userRoutes from "./routes/userRoutes.js";
-import gameRoutes from "./routes/gameRoutes.js";
+// import gameRoutes from "./routes/gameRoutes.js";
 
 import dotenv from "dotenv";
 
@@ -21,7 +21,7 @@ app.use(express.json());
 mongoose.connect(process.env.DATABASE_URL);
 
 app.use("/api/users", userRoutes);
-app.use("/api/games", gameRoutes);
+// app.use("/api/games", gameRoutes);
 
 const httpServer = http.createServer(app);
 export const io = new Server(httpServer, {
