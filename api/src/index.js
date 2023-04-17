@@ -16,11 +16,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect(process.env.DATABASE_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-});
+mongoose.connect('mongodb+srv://tenthousand:tenthousand@tenthousand.hnyiwxh.mongodb.net/test');
 
 app.use("/api/users", userRoutes);
 app.use("/api/games", gameRoutes);
