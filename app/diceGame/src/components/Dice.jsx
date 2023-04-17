@@ -3,40 +3,25 @@ import PropTypes from "prop-types";
 
 const Dice = ({ dots }) => {
   const dotPositions = {
-    1: ["center"],
-    2: ["top-left", "bottom-right"],
-    3: ["top-left", "center", "bottom-right"],
-    4: ["top-left", "top-right", "bottom-left", "bottom-right"],
-    5: ["top-left", "top-right", "center", "bottom-left", "bottom-right"],
-    6: [
-      "top-left",
-      "top-right",
-      "mid-left",
-      "mid-right",
-      "bottom-left",
-      "bottom-right",
-    ],
+    1: [5],
+    2: [1, 9],
+    3: [1, 5, 9],
+    4: [1, 3, 7, 9],
+    5: [1, 3, 5, 7, 9],
+    6: [1, 3, 4, 6, 7, 9],
   };
 
   return (
-    <div className="w-24 h-24 bg-white rounded-lg flex items-center justify-center p-3">
-      {dotPositions[dots].map((position) => (
-        <span
-          key={position}
-          className={`w-3 h-3 bg-black rounded-full absolute ${
-            position === "top-left" ? "top-3 left-3" : ""
-          }
-          ${position === "top-right" ? "top-3 right-3" : ""} ${
-            position === "bottom-left" ? "bottom-3 left-3" : ""
-          }
-          ${position === "bottom-right" ? "bottom-3 right-3" : ""} ${
-            position === "center" ? "self-center" : ""
-          }
-          ${position === "mid-left" ? "self-center left-3" : ""} ${
-            position === "mid-right" ? "self-center right-3" : ""
-          }`}
-        ></span>
-      ))}
+    <div className="w-20 h-20">
+      <div className="w-full h-full bg-white rounded-lg border border-black grid grid-cols-3 grid-rows-3 gap-1 p-3">
+        {[...Array(9)].map((_, idx) => (
+          <div key={idx} className="flex items-center justify-center">
+            {dotPositions[dots].includes(idx + 1) && (
+              <span className="w-3 h-3 bg-black rounded-full"></span>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
