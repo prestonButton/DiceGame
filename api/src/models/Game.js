@@ -1,39 +1,39 @@
 import mongoose from "mongoose";
 
 const GameSchema = new mongoose.Schema({
-  players : [
+  players: [
     {
-      type : mongoose.Schema.Types.ObjectId,
-      ref : "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   ],
-  scores : [
+  scores: [
     {
-      playerId : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "User",
+      playerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
-      score : Number,
+      score: Number,
     },
   ],
-  currentPlayerId : {
-    type : mongoose.Schema.Types.ObjectId,
-    ref : "User",
+  currentPlayerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
   },
-  gameStatus : {
-    type : String,
-    enum : [ "waiting", "playing", "finished" ],
-    default : "waiting",
+  gameStatus: {
+    type: String,
+    enum: ["waiting", "playing", "finished"],
+    default: "waiting",
   },
-  round : {
-    type : Number,
-    default : 1,
+  round: {
+    type: Number,
+    default: 1,
   },
-  turnScore : {
-    type : Number,
-    default : 0,
+  turnScore: {
+    type: Number,
+    default: 0,
   },
-  lastRoll : [ Number ],
+  lastRoll: [Number],
 });
 
 export default mongoose.model("Game", GameSchema);

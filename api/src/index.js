@@ -6,7 +6,7 @@ import express from "express";
 import helmet from "helmet";
 import http from "http";
 import mongoose from "mongoose";
-import {Server} from "socket.io";
+import { Server } from "socket.io";
 
 import userRoutes from "./routes/userRoutes.js";
 
@@ -25,9 +25,9 @@ app.use("/api/users", userRoutes);
 
 const httpServer = http.createServer(app);
 export const io = new Server(httpServer, {
-  cors : {
-    origin : "*", // Replace this with the URL of your front-end (e.g.,
-                  // "http://localhost:3000")
+  cors: {
+    origin: "*", // Replace this with the URL of your front-end (e.g.,
+    // "http://localhost:3000")
   },
 });
 
@@ -36,8 +36,9 @@ io.on("connection", (socket) => {
 
   // You can add additional event listeners here if needed
 
-  socket.on("disconnect",
-            () => { console.log("User disconnected:", socket.id); });
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
 });
 
 const port = process.env.PORT || 3001;
