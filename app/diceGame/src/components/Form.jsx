@@ -5,7 +5,7 @@ const Form = (props) => {
   return (
     <form
       onSubmit={props.onSubmit}
-      className="border border-red-50 rounded-md w-1/2 flex flex-col items-center gap-4 h-fit"
+      className="border border-red-50 rounded-md max-w-[350px] sm:w-full flex flex-col items-center gap-4 h-fit mx-auto px-3"
     >
       <h2 className="text-center pt-12 text-3xl">{props.label}</h2>
       <div>
@@ -20,7 +20,7 @@ const Form = (props) => {
           className="p-2 mt-2 w-[300px] input-form text-white rounded-lg"
         />
       </div>
-      <div>
+      <div >
         <label htmlFor="password">Password: </label>
         <br />
         <input
