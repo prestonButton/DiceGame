@@ -1,86 +1,48 @@
-import { Router } from "express";
-import bcrypt from "bcryptjs";
+import express from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import bcrypt from "bcrypt";
+import { UserModel } from "../models/Users.js";
 import dotenv from "dotenv";
 
-dotenv.config();
+const router = express.Router();
 
-const router = Router();
-
-// Register Route
 router.post("/register", async (req, res) => {
-  try {
-    // Check if the username already exists
-    const existingUser = await User.findOne({ username: req.body.username });
+  const { username, password } = req.body;
 
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({
-          message: "Username already taken. Please choose another one.",
-        });
-    }
+  const user = await UserModel.findOne({ username });
 
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
-    // Create a new User instance
-    const newUser = new User({
-      username: req.body.username,
-      password: hashedPassword,
-    });
-
-    // Save the new user to the database
-    await newUser.save();
-
-    res
-      .status(201)
-      .json({ message: "Registration successful", userId: newUser._id });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during registration." });
+  if (user) {
+    return res.json({ message: "User already exists!" });
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const newUser = new UserModel({ username, password: hashedPassword });
+  await newUser.save();
+
+  res.json({ message: "User registered successfully" });
 });
 
-// Login Route
 router.post("/login", async (req, res) => {
-  try {
-    // Check if the user exists
-    const user = await User.findOne({ username: req.body.username });
+  const { username, password } = req.body;
 
-    if (!user) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Username not found. Please register or try another username.",
-        });
-    }
+  const user = await UserModel.findOne({ username });
 
-    // Compare the provided password with the hashed password in the database
-    const isPasswordValid = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-
-    if (!isPasswordValid) {
-      return res
-        .status(400)
-        .json({ message: "Invalid password. Please try again." });
-    }
-
-    // Generate a JSON Web Token (JWT) for the authenticated user
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res
-      .status(200)
-      .json({ message: "Login successful", token: token, userId: user._id });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during login." });
+  if (!user) {
+    return res.json({ message: "User doesn't exist!" });
   }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return res.json({ message: "Username or password is incorrect" });
+  }
+
+  const token = jwt.sign(
+    { id: user._id },
+    process.env.JWT_SECRET /*usually an env variable*/
+  );
+  res.json({ token, userID: user._id });
 });
 
-export default router;
+export { router as userRouter };
