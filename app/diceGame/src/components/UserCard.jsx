@@ -15,6 +15,7 @@ const UserCard = (props) => {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "50%",
+          border: "2px solid white",
         }}
       >
         {props.name.charAt(0).toUpperCase()}
