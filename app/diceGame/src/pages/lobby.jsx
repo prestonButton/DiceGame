@@ -9,17 +9,17 @@ const Lobby = () => {
       <div className="flex flex-col justify-center items-center h-screen">
         <Link
           to="/"
-          className="absolute top-4 right-4 m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+          className="absolute top-4 right-4 m-2 py-2 px-4 bg-red-500 text-white font-semibold rounded-md"
         >
-          Return to Lobby
+          Leave Lobby
         </Link>
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <UserCard />
-          <UserCard />
-          <UserCard />
-          <UserCard />
-          <UserCard />
-          <UserCard />
+          <UserCard name="Tom Brady" />
+          <UserCard name="LeBum James" />
+          <UserCard name="Lionel Messi" />
+          <UserCard name="Christiano Ronaldo" />
+          <UserCard name="Aaron Judge" />
+          <UserCard name="Connor McGregor" />
         </div>
         <Link
           to="/"
