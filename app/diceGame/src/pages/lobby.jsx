@@ -1,24 +1,37 @@
 import React from "react";
-import '../tailwind.css'
-import UserCard from '../components/UserCard';
+import { Link } from "react-router-dom";
+import "../tailwind.css";
+import UserCard from "../components/UserCard";
 
 const Lobby = () => {
   return (
-    <div className="flex flex-col justify-center items-center h-screen">
-      <div className="flex flex-wrap justify-center">
-        <UserCard />
-        <UserCard />
-        <UserCard />
-        <UserCard />
-        <UserCard />
-        <UserCard />
+    <div>
+      <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 flex items-center justify-center text-white">
+        <div className="flex flex-col justify-center items-center h-screen">
+          <Link
+            to="/"
+            className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+          >
+            Leave Lobby
+          </Link>
+          <div className="flex flex-wrap justify-center">
+            <UserCard />
+            <UserCard />
+            <UserCard />
+            <UserCard />
+            <UserCard />
+            <UserCard />
+          </div>
+          <Link
+            to="/"
+            className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+          >
+            Begin Game
+          </Link>
+        </div>
       </div>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4">Begin Game</button>
     </div>
   );
 };
 
 export default Lobby;
-
-
-
