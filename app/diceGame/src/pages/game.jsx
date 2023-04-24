@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Dice from "../components/Dice.jsx";
 import UserCard from "../components/UserCard.jsx";
 
@@ -15,9 +16,12 @@ const Game = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
-      <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-4 px-4 rounded absolute top-4 right-4">
+      <Link
+        to="/"
+        className="absolute top-4 right-4 m-2 py-2 px-4 bg-red-500 text-white font-semibold rounded-md"
+      >
         Leave Game
-      </button>
+      </Link>
 
       <div className="flex flex-col items-center justify-center pt-16">
         <div className="grid grid-cols-3 gap-4 mb-8">
@@ -33,10 +37,10 @@ const Game = () => {
         </div>
 
         <div className="flex items-center justify-center mt-8">
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded mr-4">
+          <button className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md">
             Roll Dice
           </button>
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded mr-4">
+          <button className="m-2 py-2 px-4 bg-white bg-opacity-40 text-white border border-2 border-white font-semibold rounded-md">
             Hold Dice
           </button>
         </div>
