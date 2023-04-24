@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Dice from "../components/Dice.jsx";
 import UserCard from "../components/UserCard.jsx";
 
 const Game = () => {
-  const dots = 3; // Set all dice to 3 dots for now
+  const [dice, setDice] = useState([3, 3, 3, 3, 3, 3]); // Initial value of all dice set to 3
   const users = [
     { name: "Tom Brady", score: 0 },
     { name: "LeBum James", score: 0 },
@@ -13,6 +13,13 @@ const Game = () => {
     { name: "Aaron Judge", score: 0 },
     { name: "Connor McGregor", score: 0 },
   ];
+
+  const rollDice = () => {
+    const newDice = dice.map(() => {
+      return Math.floor(Math.random() * 6) + 1; // Random number between 1 and 6
+    });
+    setDice(newDice);
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
@@ -31,13 +38,16 @@ const Game = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-4">
-          {[...Array(6)].map((_, idx) => (
-            <Dice key={idx} dots={dots} />
+          {dice.map((dots, idx) => (
+            <Dice key={idx + 1} dots={dots} />
           ))}
         </div>
 
         <div className="flex items-center justify-center mt-8">
-          <button className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md">
+          <button
+            className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+            onClick={rollDice}
+          >
             Roll Dice
           </button>
           <button className="m-2 py-2 px-4 bg-white bg-opacity-40 text-white border border-2 border-white font-semibold rounded-md">
