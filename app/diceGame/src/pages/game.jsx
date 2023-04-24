@@ -12,13 +12,7 @@ const Game = () => {
       </button>
 
       <div className="flex flex-col items-center justify-center pt-16">
-        <div className="flex flex-wrap justify-center gap-4">
-          {[...Array(6)].map((_, idx) => (
-            <Dice key={idx} dots={dots} />
-          ))}
-        </div>
-
-        <div className="flex flex-wrap w-full justify-center my-8">
+        <div className="flex justify-center gap-8 mb-8">
           <UserCard name="Tom Brady" />
           <UserCard name="LeBum James" />
           <UserCard name="Lionel Messi" />
@@ -27,7 +21,13 @@ const Game = () => {
           <UserCard name="Connor McGregor" />
         </div>
 
-        <div className="flex items-center justify-center">
+        <div className="flex flex-wrap justify-center gap-4">
+          {[...Array(6)].map((_, idx) => (
+            <Dice key={idx} dots={dots} />
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center mt-8">
           <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded mr-4">
             Roll Dice
           </button>
