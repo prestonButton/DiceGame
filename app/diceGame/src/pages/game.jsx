@@ -4,6 +4,14 @@ import UserCard from "../components/UserCard.jsx";
 
 const Game = () => {
   const dots = 3; // Set all dice to 3 dots for now
+  const users = [
+    { name: "Tom Brady", score: 0 },
+    { name: "LeBum James", score: 0 },
+    { name: "Lionel Messi", score: 0 },
+    { name: "Christiano Ronaldo", score: 0 },
+    { name: "Aaron Judge", score: 0 },
+    { name: "Connor McGregor", score: 0 },
+  ];
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
@@ -12,13 +20,10 @@ const Game = () => {
       </button>
 
       <div className="flex flex-col items-center justify-center pt-16">
-        <div className="flex justify-center gap-8 mb-8">
-          <UserCard name="Tom Brady" />
-          <UserCard name="LeBum James" />
-          <UserCard name="Lionel Messi" />
-          <UserCard name="Christiano Ronaldo" />
-          <UserCard name="Aaron Judge" />
-          <UserCard name="Connor McGregor" />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {users.map((user, idx) => (
+            <UserCard key={idx} name={user.name} score={user.score} />
+          ))}
         </div>
 
         <div className="flex flex-wrap justify-center gap-4">
