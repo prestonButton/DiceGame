@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 
 import { userRouter } from "./routes/userRoutes.js";
 import { gameRouter } from "./routes/gameRoutes.js";
+import { createGame, rollDice } from "./gameLogic.js";
 
 // Load environment variables
 dotenv.config();
@@ -19,37 +20,57 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 io.on("connection", (socket) => {
-  console.log("A user connected.", socket.id);
+  console.log(`User ${socket.id} connected.`);
 
-  socket.on("join-room", (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
-  });
-
-  socket.on("exit-room", () => {
-    socket.leaveAll();
-    console.log(`User ${socket.id} left all rooms`);
-  });
-
-  socket.on("join-game", (gameId) => {
-    socket.join(gameId);
+  socket.on("join-game", async (gameId) => {
     console.log(`User ${socket.id} joined game ${gameId}`);
+
+    // Retrieve game data from database
+    const game = await GameModel.findById(gameId);
+    if (!game) {
+      console.log(`Game ${gameId} not found.`);
+      return;
+    }
+
+    // Create game state object
+    const gameState = createGame(
+      game.players,
+      game.maxPlayers,
+      game.winningScore
+    );
+
+    // Save initial game state to database
+    await GameModel.findByIdAndUpdate(gameId, { gameState });
+
+    socket.join(gameId);
+    socket.emit("game-state", gameState);
   });
 
-  socket.on("exit-game", () => {
-    socket.leaveAll();
-    console.log(`User ${socket.id} left all games`);
-  });
+  socket.on("roll-dice", async (gameId) => {
+    console.log(`User ${socket.id} rolled the dice.`);
 
-  socket.on("roll-dice", (gameId) => {
-    // Implement game logic here to roll the dice
-    // and update the game state
+    // Retrieve game data from database
+    const game = await GameModel.findById(gameId);
+    if (!game) {
+      console.log(`Game ${gameId} not found.`);
+      return;
+    }
 
-    io.to(gameId).emit("game-state", game);
+    // Retrieve game state from database
+    const gameState = game.gameState;
+
+    // Update game state
+    rollDice(gameState);
+
+    // Save updated game state to database
+    await GameModel.findByIdAndUpdate(gameId, { gameState });
+
+    // Send updated game state to all players in the game
+    io.to(gameId).emit("game-state", gameState);
   });
 
   socket.on("disconnect", () => {
-    console.log("A user disconnected.", socket.id);
+    console.log(`User ${socket.id} disconnected.`);
   });
 });
 
