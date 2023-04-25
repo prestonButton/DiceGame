@@ -1,12 +1,18 @@
 import express from "express";
 import { GameModel } from "../models/game.js";
+import { rollDice } from "../gameLogic.js";
 
 const gameRouter = express.Router();
 
 // Create a new game session
 gameRouter.post("/newgame", async (req, res) => {
   const userId = req.user._id;
-  const newGame = new GameModel({ players: [userId] });
+  const newGame = new GameModel({
+    players: [userId],
+    maxPlayers: 6,
+    winningScore: 100,
+    gameState: {},
+  });
 
   await newGame.save();
 
@@ -69,12 +75,17 @@ gameRouter.post("/:id/roll", async (req, res) => {
     return res.status(400).json({ message: "It's not your turn." });
   }
 
-  // Implement game logic here to roll the dice
-  // and update the game state
+  const { gameState } = game;
 
-  await game.save();
+  // Roll the dice and update the game state
+  const { score, nextPlayer } = rollDice(gameState);
+  gameState.score = score;
+  gameState.currentPlayer = nextPlayer;
 
-  res.json(game);
+  game.gameState = gameState;
+  const savedGame = await game.save();
+
+  res.json(savedGame);
 });
 
 export { gameRouter };
