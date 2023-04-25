@@ -5,7 +5,6 @@ import Home from "./pages/home";
 import Game from "./pages/Game";
 import Lobby from "./pages/Lobby";
 import Login from "./pages/Login";
-import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
