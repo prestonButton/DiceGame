@@ -1,22 +1,20 @@
-
-
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useCookies } from "react-cookie";
 import Home from "./pages/home";
-import Game from "./pages/game";
-import Lobby from "./pages/lobby";
-import Login from './pages/login'
-import Signup from "./pages/signup";
+import Game from "./pages/Game";
+import Lobby from "./pages/Lobby";
+import Login from "./pages/Login";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/lobby" element={<Lobby />} />
+        <PrivateRoute path="/game/:id" element={<Game />} />
+        <PrivateRoute path="/lobby/:id" element={<Lobby />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
       </Routes>
     </Router>
   );
