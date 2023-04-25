@@ -1,29 +1,53 @@
 import mongoose from "mongoose";
 
-const GameSchema = new mongoose.Schema({
-  players: [
+const PlayerSchema = new mongoose.Schema({
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  score: {
+    type: Number,
+    default: 0,
+  },
+});
+
+const GameStateSchema = new mongoose.Schema({
+  players: [PlayerSchema],
+  active_player: {
+    type: Number,
+    default: 0,
+  },
+  dice: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      type: Number,
     },
   ],
-  maxPlayers: {
+  active_player_score: {
     type: Number,
-    required: true,
-    min: 2,
-    max: 6,
-    default: 2,
+    default: 0,
   },
-  winningScore: {
-    type: Number,
-    required: true,
-    default: 100,
+  // add any other game-specific state properties if required
+});
+
+const GameSchema = new mongoose.Schema({
+  lobby_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Lobby",
   },
-  gameState: {
-    type: Object,
+  game_state: {
+    type: GameStateSchema,
     required: true,
     default: {},
+  },
+  start_time: {
+    type: Date,
+    default: Date.now,
+  },
+  end_time: Date,
+  game_status: {
+    type: String,
+    enum: ["ongoing", "finished", "abandoned"],
+    default: "ongoing",
   },
 });
 
