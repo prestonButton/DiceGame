@@ -1,23 +1,17 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { Route, Navigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import Home from "./pages/Home";
-import Game from "./pages/Game";
-import Lobby from "./pages/Lobby";
-import Login from "./pages/Login";
-import PrivateRoute from "./components/PrivateRoute";
 
-function App() {
+function PrivateRoute({ element: Component, ...rest }) {
+  const [cookies] = useCookies(["access_token"]);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <PrivateRoute path="/game/:id" element={<Game />} />
-        <PrivateRoute path="/lobby/:id" element={<Lobby />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </Router>
+    <Route
+      {...rest}
+      element={cookies.access_token ? <Component /> : <Navigate to="/login" />}
+    />
   );
 }
 
-export default App;
+export default PrivateRoute;
