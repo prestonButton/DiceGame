@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 
 import { userRouter } from "./routes/userRoutes.js";
 import { gameRouter } from "./routes/gameRoutes.js";
-import { createGame, rollDice } from "./gameLogic.js";
+import lobbyRoutes from "./routes/lobbyRoutes.js"; // Import the new Lobby routes
 
 // Load environment variables
 dotenv.config();
@@ -19,60 +19,7 @@ const server = http.createServer(app);
 // Set up Socket.IO server
 const io = new Server(server);
 
-io.on("connection", (socket) => {
-  console.log(`User ${socket.id} connected.`);
-
-  socket.on("join-game", async (gameId) => {
-    console.log(`User ${socket.id} joined game ${gameId}`);
-
-    // Retrieve game data from database
-    const game = await GameModel.findById(gameId);
-    if (!game) {
-      console.log(`Game ${gameId} not found.`);
-      return;
-    }
-
-    // Create game state object
-    const gameState = createGame(
-      game.players,
-      game.maxPlayers,
-      game.winningScore
-    );
-
-    // Save initial game state to database
-    await GameModel.findByIdAndUpdate(gameId, { gameState });
-
-    socket.join(gameId);
-    socket.emit("game-state", gameState);
-  });
-
-  socket.on("roll-dice", async (gameId) => {
-    console.log(`User ${socket.id} rolled the dice.`);
-
-    // Retrieve game data from database
-    const game = await GameModel.findById(gameId);
-    if (!game) {
-      console.log(`Game ${gameId} not found.`);
-      return;
-    }
-
-    // Retrieve game state from database
-    const gameState = game.gameState;
-
-    // Update game state
-    rollDice(gameState);
-
-    // Save updated game state to database
-    await GameModel.findByIdAndUpdate(gameId, { gameState });
-
-    // Send updated game state to all players in the game
-    io.to(gameId).emit("game-state", gameState);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`User ${socket.id} disconnected.`);
-  });
-});
+// ... Your websocket code
 
 // Set up middleware
 app.use(cors());
@@ -81,6 +28,7 @@ app.use(express.json());
 // Set up routes
 app.use("/users", userRouter);
 app.use("/games", gameRouter);
+app.use("/lobby", lobbyRoutes); // Add lobby routes
 
 // Connect to MongoDB database
 mongoose.connect(process.env.DATABASE_URL, {
