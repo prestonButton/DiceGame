@@ -12,8 +12,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <PrivateRoute path="/game/:id" element={<Game />} />
-        <PrivateRoute path="/lobby/:id" element={<Lobby />} />
+        <PrivateRoute path="/game/:id/*" element={<Game />} />
+        <PrivateRoute path="/lobby/:id/*" element={<Lobby />} />
         <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
