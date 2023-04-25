@@ -1,21 +1,32 @@
 import mongoose from "mongoose";
 
-const { Schema } = mongoose;
-
-const gameSchema = new Schema(
-  {
-    players: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    maxPlayers: { type: Number, required: true, default: 4 },
-    gameState: {
-      type: String,
-      enum: ["waiting", "playing", "finished"],
-      default: "waiting",
+const GameSchema = new mongoose.Schema({
+  players: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    // Add more fields for game state as needed
+  ],
+  maxPlayers: {
+    type: Number,
+    required: true,
+    min: 2,
+    max: 6,
+    default: 2,
   },
-  { timestamps: true }
-);
+  winningScore: {
+    type: Number,
+    required: true,
+    default: 100,
+  },
+  gameState: {
+    type: Object,
+    required: true,
+    default: {},
+  },
+});
 
-const GameModel = mongoose.model("Game", gameSchema);
+const GameModel = mongoose.model("Game", GameSchema);
 
 export { GameModel };
