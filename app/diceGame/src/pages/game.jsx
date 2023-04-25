@@ -50,7 +50,7 @@ const Game = () => {
           >
             Roll Dice
           </button>
-          <button className="m-2 py-2 px-4 bg-white bg-opacity-40 text-white border border-2 border-white font-semibold rounded-md">
+          <button className="m-2 py-2 px-4 bg-white bg-opacity-40 text-white border-2 border-white font-semibold rounded-md">
             Hold Dice
           </button>
         </div>
