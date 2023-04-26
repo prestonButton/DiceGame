@@ -10,6 +10,13 @@ const HomePage = () => {
     window.localStorage.removeItem("userID");
   };
 
+  const handleClick = () => {
+    // I need a function to check if there are any lobby's with space, and if there are,
+    // join one of those, otherwise create a new lobby and join that one
+
+    // I need to get the user's ID from local storage
+  }
+
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
       {/* Conditionally render the play and the signup, login, and logout buttons depending on whether or not the user is logged in */}
@@ -31,7 +38,8 @@ const HomePage = () => {
       ) : (
         <div className="absolute top-6 right-6 text-white">
           {/* TODO:  Add an onclick to add user to a lobby and navigate to the lobby*/}
-          <button className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md">
+          <button className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+          onClick={handleClick}>
             Play
           </button>
           <button

@@ -15,6 +15,37 @@ lobbyRoutes.post("/create", async (req, res) => {
   }
 });
 
+// Route for getting a lobby. This route will be used by the frontend to get the lobby details
+// and to see if there are any lobbies with less than 6 people. It will return the lobby ID
+
+lobbyRoutes.get("/get", async (req, res) => {
+  try {
+    // check all active lobbies for one where players array length < 6
+    const lobby = await LobbyModel.aggregate([
+      {
+        $match: {
+          game_started: false,
+        },
+      },
+      {
+        $addFields: { player_count: { $size: "$players" } },
+      },
+      {
+        $match: {
+          player_count: { $lt: 6 },
+        },
+      },
+    ]).exec();
+
+    if (!lobby || lobby.length === 0) {
+      return res.status(404).json({ message: "No lobbies found" });
+    }
+    return res.status(200).json({ lobbyId: lobby[0]._id });
+  } catch (error) {
+    return res.status(500).json({ message: "Error getting lobby", error });
+  }
+});
+
 // Route for joining a lobby
 lobbyRoutes.post("/join/:lobbyId", async (req, res) => {
   const { lobbyId } = req.params;
