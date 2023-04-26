@@ -2,6 +2,7 @@ import React from "react";
 import { useCookies } from "react-cookie";
 import { Link } from "react-router-dom";
 import SpinningDice from "../components/SpinningDice";
+import axios from "axios";
 
 const HomePage = () => {
   const [cookies, setCookies] = useCookies(["access_token"]);
@@ -10,12 +11,13 @@ const HomePage = () => {
     window.localStorage.removeItem("userID");
   };
 
-  const handleClick = () => {
-    // I need a function to check if there are any lobby's with space, and if there are,
-    // join one of those, otherwise create a new lobby and join that one
+  const handleClick = async () => {
+    // if there are any lobbies with space, join one
+    // else create a new lobby and join it
+    // navigate to that lobby
 
-    // I need to get the user's ID from local storage
-  }
+
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
@@ -38,8 +40,10 @@ const HomePage = () => {
       ) : (
         <div className="absolute top-6 right-6 text-white">
           {/* TODO:  Add an onclick to add user to a lobby and navigate to the lobby*/}
-          <button className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
-          onClick={handleClick}>
+          <button
+            className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
+            onClick={handleClick}
+          >
             Play
           </button>
           <button
