@@ -1,14 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../tailwind.css";
 import UserCard from "../components/UserCard";
+import axios from "axios"
 
 const Lobby = () => {
-  const handleLeaveLobby = () => {
+  const handleLeaveLobby = async () => {
     //remove user from the lobby,
     //navigate to home page
 
     const userID = window.localStorage.getItem("userID");
+    const LobbyID = window.localStorage.getItem("LobbyID");
+    const response = await axios.get(API_URL + `/lobby/leave/${LobbyID}`, {
+      lobbyId: LobbyID,
+      userId: userID
+    });
     console.log(`${userID} left lobby`)
   };
 
