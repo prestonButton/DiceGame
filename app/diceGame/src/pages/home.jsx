@@ -1,10 +1,13 @@
 import React from "react";
 import { useCookies } from "react-cookie";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SpinningDice from "../components/SpinningDice";
 import axios from "axios";
 
 const HomePage = () => {
+  const API_URL = import.meta.env.VITE_API_BASE_URL 
+  const navigate = useNavigate();
+
   const [cookies, setCookies] = useCookies(["access_token"]);
   const logout = () => {
     setCookies("access_token", "", { path: "/" });
@@ -15,8 +18,22 @@ const HomePage = () => {
     // if there are any lobbies with space, join one
     // else create a new lobby and join it
     // navigate to that lobby
-
-
+    const userID = window.localStorage.getItem("userID");
+    const response = await axios.get(API_URL + "/lobby/get");
+    const LobbyID = response.data.lobbyId 
+    if(LobbyID){
+      const joinLobby = await axios.post(API_URL + `/lobby/join/${LobbyID}`, {
+        lobbyId: LobbyID,
+        userId: userID
+      })
+      console.log(`${userID} joined lobby ${LobbyID}`)
+    } else {
+      const createLobby = await axios.post(API_URL + "/lobby/create", {
+        userId: userID
+      })
+      console.log(`${userID} created lobby ${LobbyID}`);
+    }
+    navigate(`/lobby/${LobbyID}`);
   };
 
   return (
