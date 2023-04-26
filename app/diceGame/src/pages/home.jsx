@@ -33,6 +33,7 @@ const HomePage = () => {
       })
       console.log(`${userID} created lobby ${LobbyID}`);
     }
+    window.localStorage.setItem("LobbyID", LobbyID);
     navigate(`/lobby/${LobbyID}`);
   };
 
