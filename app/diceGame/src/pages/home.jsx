@@ -12,6 +12,7 @@ const HomePage = () => {
   const logout = () => {
     setCookies("access_token", "", { path: "/" });
     window.localStorage.removeItem("userID");
+    window.localStorage.removeItem("LobbyID");
   };
 
   const handleClick = async () => {
@@ -19,20 +20,25 @@ const HomePage = () => {
     // else create a new lobby and join it
     // navigate to that lobby
     const userID = window.localStorage.getItem("userID");
-    const response = await axios.get(API_URL + "/lobby/get");
+    const response = await axios.get("http://localhost:3001/lobby/get");
     const LobbyID = response.data.lobbyId;
+    console.log('LobbyID=' + LobbyID)
     if (LobbyID) {
+      console.log('A')
       const joinLobby = await axios.post(API_URL + `/lobby/join/${LobbyID}`, {
         lobbyId: LobbyID,
         userId: userID,
       });
+     
       console.log(`${userID} joined lobby ${LobbyID}`);
     } else {
+      console.log('B')
       const createLobby = await axios.post(API_URL + "/lobby/create", {
         userId: userID,
       });
       console.log(`${userID} created lobby ${LobbyID}`);
     }
+    console.log('C')
     window.localStorage.setItem("LobbyID", LobbyID);
     navigate(`/lobby/${LobbyID}`);
   };
