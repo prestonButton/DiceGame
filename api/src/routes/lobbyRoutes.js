@@ -72,4 +72,64 @@ lobbyRoutes.post("/start/:lobbyId", async (req, res) => {
   }
 });
 
+  // Route for leaving a lobby/game
+lobbyRoutes.delete("/leave/:lobbyId", async (req, res) => {
+  const { lobbyId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const lobby = await LobbyModel.findById(lobbyId);
+
+    if (!lobby) {
+      return res.status(404).json({ message: "Lobby not found" });
+    }
+
+    // Find player's index in the lobby
+    const playerIndex = lobby.players.findIndex(id => id.toString() === userId);
+
+    if (playerIndex === -1) {
+      return res.status(400).json({ message: "Player not found in the lobby" });
+    }
+
+    // Remove player from the lobby
+    lobby.players.splice(playerIndex, 1);
+
+    if (lobby.game_started) {
+      const game = await GameModel.findOne({ lobby_id: lobbyId });
+
+      if (game) {
+        // Remove player from game state players list
+        const gameStatePlayers = game.game_state.players;
+        const gamePlayerIndex = gameStatePlayers.findIndex(player => (
+          player.user_id.toString() === userId
+        ));
+
+        if (gamePlayerIndex !== -1) {
+          gameStatePlayers.splice(gamePlayerIndex, 1);
+        }
+
+        // Optional: End the game if only one player left
+        if (gameStatePlayers.length === 1) {
+          game.end_time = new Date();
+          game.game_status = "finished";
+        }
+
+        await game.save();
+      }
+    }
+
+    // Update the lobby status if all players have left
+    if (lobby.players.length === 0) {
+      lobby.game_started = false;
+    }
+
+    await lobby.save();
+
+    return res.status(200).json({ message: "Player successfully left the lobby" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error leaving lobby", error });
+  }
+});
+
+
 export default lobbyRoutes;
