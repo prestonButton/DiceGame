@@ -1,16 +1,37 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../tailwind.css";
 import UserCard from "../components/UserCard";
+import axios from "axios";
 
 const Lobby = () => {
-  const handleLeaveLobby = () => {
-    //remove user from the lobby,
-    //navigate to home page
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const navigate = useNavigate();
 
-    const userID = window.localStorage.getItem("userID");
-    console.log(`${userID} left lobby`)
-  };
+  const handleLeaveLobby = async () => {
+    const userId = window.localStorage.getItem("userID");
+    const lobbyId = window.localStorage.getItem("LobbyID");
+
+    if (!userId || !lobbyId) {
+      console.error("User ID or Lobby ID not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`${API_URL}/lobby/leave/${lobbyId}`, {
+        data: { userId },
+      });
+
+      console.log(response.data.message);
+      window.localStorage.removeItem("LobbyID");
+      navigate("/");
+    } catch (error) {
+      console.error(
+        "Error leaving lobby:",
+        error.response?.data?.message || error.message
+      );
+    }
+  }
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 flex items-center justify-center text-white">

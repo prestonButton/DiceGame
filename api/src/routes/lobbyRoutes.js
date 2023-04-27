@@ -38,7 +38,7 @@ lobbyRoutes.get("/get", async (req, res) => {
     ]).exec();
 
     if (!lobby || lobby.length === 0) {
-      return res.status(404).json({ message: "No lobbies found" });
+      return res.status(200).json({ lobbyId: -1, message: "No lobbies found" });
     }
     return res.status(200).json({ lobbyId: lobby[0]._id });
   } catch (error) {
@@ -117,6 +117,7 @@ lobbyRoutes.delete("/leave/:lobbyId", async (req, res) => {
 
     // Find player's index in the lobby
     const playerIndex = lobby.players.findIndex(id => id.toString() === userId);
+    console.log(playerIndex)
 
     if (playerIndex === -1) {
       return res.status(400).json({ message: "Player not found in the lobby" });
