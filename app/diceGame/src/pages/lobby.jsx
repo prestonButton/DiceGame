@@ -36,6 +36,10 @@ const Lobby = () => {
   const handleBeginGame = async () => {
     const lobbyId = window.localStorage.getItem("LobbyID");
     const response = await axios.post(`${API_URL}/lobby/start/${lobbyId}`);
+    if(res == 400) {
+      alert('Not enough players to start game');
+      return;
+    }
     const gameId = response.data.gameId;
     window.localStorage.setItem("GameID", gameId);
     navigate(`/game/${gameId}`)
