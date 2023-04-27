@@ -15,33 +15,43 @@ const HomePage = () => {
     window.localStorage.removeItem("LobbyID");
   };
 
-  const handleClick = async () => {
-    // if there are any lobbies with space, join one
-    // else create a new lobby and join it
-    // navigate to that lobby
-    const userID = window.localStorage.getItem("userID");
-    const response = await axios.get("http://localhost:3001/lobby/get");
-    const LobbyID = response.data.lobbyId;
-    console.log('LobbyID=' + LobbyID)
-    if (LobbyID) {
-      console.log('A')
-      const joinLobby = await axios.post(API_URL + `/lobby/join/${LobbyID}`, {
-        lobbyId: LobbyID,
-        userId: userID,
-      });
-     
-      console.log(`${userID} joined lobby ${LobbyID}`);
-    } else {
-      console.log('B')
-      const createLobby = await axios.post(API_URL + "/lobby/create", {
-        userId: userID,
-      });
-      console.log(`${userID} created lobby ${LobbyID}`);
-    }
-    console.log('C')
-    window.localStorage.setItem("LobbyID", LobbyID);
-    navigate(`/lobby/${LobbyID}`);
-  };
+const handleClick = async () => {
+  // first check if there are any lobbies. If not, create one
+  // then,
+  // if there are any lobbies with space, join one
+  // else create a new lobby and join it
+  // navigate to that lobby
+
+  const userID = window.localStorage.getItem("userID");
+  const response = await axios.get("http://localhost:3001/lobby/get");
+  const LobbyID = response.data.lobbyId;
+  console.log("LobbyID=" + LobbyID);
+
+  if (LobbyID) {
+    console.log("A");
+    const joinLobby = await axios.post(API_URL + `/lobby/join/${LobbyID}`, {
+      lobbyId: LobbyID,
+      userId: userID,
+    });
+
+    console.log(`${userID} joined lobby ${LobbyID}`);
+  } else {
+    console.log("B");
+    const createLobbyResponse = await axios.post(API_URL + "/lobby/create", {
+      userId: userID,
+    });
+
+    // Use the created lobby's ID
+    const createdLobbyId = createLobbyResponse.data.lobbyId;
+
+    console.log(`${userID} created lobby ${createdLobbyId}`);
+    // Update the current LobbyID
+    LobbyID = createdLobbyId;
+  }
+  console.log("C");
+  window.localStorage.setItem("LobbyID", LobbyID);
+  navigate(`/lobby/${LobbyID}`);
+};
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
