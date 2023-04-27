@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Dice from "../components/Dice.jsx";
 import UserCard from "../components/UserCard.jsx";
+import axios from "axios";
+
 
 const Game = () => {
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const navigate = useNavigate();
+
   const [dice, setDice] = useState([3, 3, 3, 3, 3, 3]); // Initial value of all dice set to 3
   const users = [
+    //TODO - replace with websocket call to server to get users
     { name: "Tom Brady", score: 0 },
     { name: "LeBum James", score: 0 },
     { name: "Lionel Messi", score: 0 },
@@ -15,20 +21,46 @@ const Game = () => {
   ];
 
   const rollDice = () => {
-    const newDice = dice.map(() => {
-      return Math.floor(Math.random() * 6) + 1; // Random number between 1 and 6
-    });
-    setDice(newDice);
+    //websocket call to server to roll dice
+  };
+
+  const handleLeaveGame = async() => {
+    const userId = window.localStorage.getItem("userID");
+    const lobbyId = window.localStorage.getItem("LobbyID");
+
+    if (!userId || !lobbyId) {
+      console.error("User ID or Lobby ID not found in localStorage");
+      return;
+    }
+
+    try {
+      const leaveGameResponse = await axios.post(`${API_URL}/game/leave/${lobbyId}`, {
+        data: { userId },
+      });
+
+      const leaveLobbyResponse = await axios.delete(`${API_URL}/lobby/leave/${lobbyId}`, {
+        data: { userId },
+      });
+
+      console.log(response.data.message);
+      window.localStorage.removeItem("LobbyID");
+      navigate("/");
+    } catch (error) {
+      console.error(
+        "Error leaving lobby:",
+        error.response?.data?.message || error.message
+      );
+    }
   };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
-      <Link
-        to="/"
+      <button
+        onClick={handleLeaveGame}
         className="absolute top-4 right-4 m-2 py-2 px-4 bg-red-500 text-white font-semibold rounded-md"
       >
         Leave Game
-      </Link>
+      </button>
 
       <div className="flex flex-col items-center justify-center pt-16">
         <div className="grid grid-cols-3 gap-4 mb-8">
