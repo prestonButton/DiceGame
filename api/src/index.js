@@ -17,9 +17,28 @@ const app = express();
 const server = http.createServer(app);
 
 // Set up Socket.IO server
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Replace with your client-side domain (e.g. "http://localhost:3000") for better security
+    methods: ["GET", "POST"],
+  },
+});
 
-// ... Your websocket code
+// Set up connection logic
+io.on("connection", (socket) => {
+  console.log("New WebSocket connection...");
+
+  // Define event handlers for different client-side events here
+  // For example:
+  // socket.on('event_name', (data) => {
+  //   // Your event handling logic here
+  // });
+
+  // Disconnect event
+  socket.on("disconnect", () => {
+    console.log("User has disconnected");
+  });
+});
 
 // Set up middleware
 app.use(cors());
@@ -29,6 +48,12 @@ app.use(express.json());
 app.use("/users", userRouter);
 app.use("/games", gameRouter);
 app.use("/lobby", lobbyRoutes); // Add lobby routes
+
+// Pass the 'io' instance to routes if required (optional integration)
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // Connect to MongoDB database
 mongoose.connect(process.env.DATABASE_URL, {
