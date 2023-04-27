@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
-import Game from "./pages/Game";
-import Lobby from "./pages/Lobby";
+import Game from "./pages/game";
+import Lobby from "./pages/lobby";
 import Login from "./pages/Login";
 import Signup from "./pages/signup";
 
