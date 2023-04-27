@@ -33,6 +33,15 @@ const Lobby = () => {
     }
   }
 
+  const handleBeginGame = async () => {
+    const lobbyId = window.localStorage.getItem("LobbyID");
+    const response = await axios.post(`${API_URL}/lobby/start/${lobbyId}`);
+    const gameId = response.data.gameId;
+    navigate(`/game/${gameId}`)
+  }
+
+
+
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 flex items-center justify-center text-white">
       <div className="flex flex-col justify-center items-center h-screen">
@@ -50,12 +59,12 @@ const Lobby = () => {
           <UserCard name="Aaron Judge" />
           <UserCard name="Connor McGregor" />
         </div>
-        <Link
-          to="/"
+        <button
+          onClick={handleBeginGame}
           className="m-8 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
         >
           Begin Game
-        </Link>
+        </button>
       </div>
     </div>
   );

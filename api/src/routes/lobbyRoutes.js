@@ -80,7 +80,7 @@ lobbyRoutes.post("/start/:lobbyId", async (req, res) => {
     if (!lobby || lobby.game_started || lobby.players.length < 2) {
       return res
         .status(400)
-        .json({ message: "Cannot start game in this lobby" });
+        .json({ message: "Cannot start game in this lobby. Not enough players" });
     }
 
     lobby.game_started = true;
