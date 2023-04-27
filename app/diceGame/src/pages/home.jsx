@@ -24,7 +24,7 @@ const handleClick = async () => {
 
   const userID = window.localStorage.getItem("userID");
   const response = await axios.get("http://localhost:3001/lobby/get");
-  const LobbyID = response.data.lobbyId;
+  let LobbyID = response.data.lobbyId;
   console.log("LobbyID=" + LobbyID);
 
   if (LobbyID) {
