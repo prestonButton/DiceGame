@@ -1,51 +1,63 @@
-import express from "express";
-import { GameModel } from "../models/game.js";
+import GameModel from "../models/Game.js";
 
-const gameRouter = express.Router();
+const gameHandlers = (io) => {
+  io.on("connection", (socket) => {
+    // Get game state
+    socket.on("getGameState", async (gameId, callback) => {
+      try {
+        const game = await GameModel.findById(gameId);
+        if (!game) {
+          return callback({ status: 404, message: "Game not found" });
+        }
+        return callback({ status: 200, gameState: game.game_state });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error retrieving game state",
+          error,
+        });
+      }
+    });
 
-// Get game state
-gameRouter.get("/state/:gameId", async (req, res) => {
-  try {
-    const { gameId } = req.params;
+    // Remove player from the game
+    socket.on("leaveGame", async ({ gameId, userId }, callback) => {
+      try {
+        const game = await GameModel.findById(gameId);
+        if (!game) {
+          return callback({ status: 404, message: "Game not found" });
+        }
 
-    const game = await GameModel.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: "Game not found" });
-    }
+        // Remove player from the game state
+        const updatedPlayers = game.game_state.players.filter(
+          (player) => player.user_id.toString() !== userId
+        );
 
-    return res.status(200).json({ game_state: game.game_state });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error retrieving game state", error });
-  }
-});
+        // Emit the game state update
+        const lobbyId = game.lobby_id;
+        const gameState = game.game_state;
+        io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
+          gameState,
+          gameId,
+        });
 
-// Remove player from the game
-gameRouter.delete("/leave/:gameId", async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    const { userId } = req.body;
+        game.game_state.players = updatedPlayers;
 
-    const game = await GameModel.findById(gameId);
-    if (!game) {
-      return res.status(404).json({ message: "Game not found" });
-    }
+        // Save the updated game state
+        await game.save();
 
-    // Find player and remove them from the game state
-    const updatedPlayers = game.game_state.players.filter(
-      (player) => player.user_id.toString() !== userId
-    );
-    game.game_state.players = updatedPlayers;
+        return callback({
+          status: 200,
+          message: "Player removed from the game",
+        });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error while removing player from the game",
+          error,
+        });
+      }
+    });
+  });
+};
 
-    // Save the updated game state
-    await game.save();
-
-    return res.status(200).json({ message: "Player removed from the game" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error while removing player from the game", error });
-  }
-});
-export { gameRouter };
+export default gameHandlers;

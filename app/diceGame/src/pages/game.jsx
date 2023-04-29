@@ -9,7 +9,7 @@ const Game = () => {
   const API_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
 
-  const [dice, setDice] = useState([3, 3, 3, 3, 3, 3]); // Initial value of all dice set to 3
+  const [dice, setDice] = useState(rollDice); // Initial value of all dice set to 3
   const users = [
     //TODO - replace with websocket call to server to get users
     { name: "Tom Brady", score: 0 },
@@ -21,8 +21,13 @@ const Game = () => {
   ];
 
   const rollDice = () => {
-    //websocket call to server to roll dice
+    //an array of 6 random numbers between 1 and 6
+    const newDice = [...Array(6)].map(() => Math.floor(Math.random() * 6) + 1);
+    setDice(newDice);
   };
+
+  const checkDice = () => {}
+
 
   const handleLeaveGame = async() => {
     const userId = window.localStorage.getItem("userID");
@@ -53,6 +58,66 @@ const Game = () => {
     }
   };
 
+  const checkDiceScore = dice => {
+  const scoreable = [];
+
+  // Check for 1s and 5s
+  dice.forEach((num, i) => {
+    if (num === 1 || num === 5) {
+      scoreable.push({ id: i, value: num });
+    }
+  });
+
+  // Check for 3+ of a kind
+  const uniqueDice = new Set(dice);
+  for (const num of uniqueDice) {
+    if (dice.filter(n => n === num).length >= 3) {
+      const indexes = dice.reduce((acc, n, i) => {
+        if (n === num) {
+          acc.push(i);
+        }
+        return acc;
+      }, []);
+      indexes.forEach(id => scoreable.push({ id, value: num }));
+    }
+  }
+
+  // Check for 1-6 sequence
+  if (dice.sort().join('') === '123456') {
+    scoreable.push(
+      { id: 0, value: dice[0] },
+      { id: 1, value: dice[1] },
+      { id: 2, value: dice[2] },
+      { id: 3, value: dice[3] },
+      { id: 4, value: dice[4] },
+      { id: 5, value: dice[5] }
+    );
+  }
+
+  // Check for 3 pairs
+  if (uniqueDice.size === 3) {
+    let pairs = 0;
+    for (const num of uniqueDice) {
+      if (dice.filter(n => n === num).length === 2) {
+        const indexes = dice.reduce((acc, n, i) => {
+          if (n === num) {
+            acc.push(i);
+          }
+          return acc;
+        }, []);
+        indexes.forEach(id => scoreable.push({ id, value: num }));
+        pairs++;
+      }
+    }
+    if (pairs === 3) {
+      scoreable.sort((a, b) => a.id - b.id);
+    }
+  }
+
+  return scoreable;
+};
+
+
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
       <button
@@ -71,7 +136,7 @@ const Game = () => {
 
         <div className="flex flex-wrap justify-center gap-4">
           {dice.map((dots, idx) => (
-            <Dice key={idx + 1} dots={dots} />
+            <Dice key={idx + 1} dots={dots} onClick={saveDice}/>
           ))}
         </div>
 
@@ -91,4 +156,6 @@ const Game = () => {
   );
 };
 
-export default Game;
+
+
+export default  Game

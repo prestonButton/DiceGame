@@ -6,8 +6,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 import { userRouter } from "./routes/userRoutes.js";
-import { gameRouter } from "./routes/gameRoutes.js";
-import lobbyRoutes from "./routes/lobbyRoutes.js"; // Import the new Lobby routes
+import gameHandlers from "./routes/gameRoutes.js";
+import lobbyHandlers from "./routes/lobbyRoutes.js"; // Import the new Lobby handlers
 
 // Load environment variables
 dotenv.config();
@@ -19,7 +19,7 @@ const server = http.createServer(app);
 // Set up Socket.IO server
 const io = new Server(server, {
   cors: {
-    origin: "*", // Replace with your client-side domain (e.g. "http://localhost:3000") for better security
+    origin: process.env.UI_URL,
     methods: ["GET", "POST"],
   },
 });
@@ -28,17 +28,17 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("New WebSocket connection...");
 
-  // Define event handlers for different client-side events here
-  // For example:
-  // socket.on('event_name', (data) => {
-  //   // Your event handling logic here
-  // });
-
   // Disconnect event
   socket.on("disconnect", () => {
     console.log("User has disconnected");
   });
 });
+
+// Initialize the lobbyHandlers with the io instance
+lobbyHandlers(io);
+
+// Initialize the gameHandlers with the io instance
+gameHandlers(io);
 
 // Set up middleware
 app.use(cors());
@@ -46,8 +46,6 @@ app.use(express.json());
 
 // Set up routes
 app.use("/users", userRouter);
-app.use("/games", gameRouter);
-app.use("/lobby", lobbyRoutes); // Add lobby routes
 
 // Pass the 'io' instance to routes if required (optional integration)
 app.use((req, res, next) => {

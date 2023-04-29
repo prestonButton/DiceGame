@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useCookies } from "react-cookie";
 import { Link, useNavigate } from "react-router-dom";
 import SpinningDice from "../components/SpinningDice";
 import axios from "axios";
+import socket from "../socket"; // Import the socket instance
 
 const HomePage = () => {
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
 
   const [cookies, setCookies] = useCookies(["access_token"]);
@@ -15,40 +15,59 @@ const HomePage = () => {
     window.localStorage.removeItem("LobbyID");
   };
 
-  const handleClick = async () => {
-    const userID = window.localStorage.getItem("userID");
-    const response = await axios.get("http://localhost:3001/lobby/get");
-    let LobbyID = response.data.lobbyId;
-    console.log("LobbyID=" + LobbyID);
+const handleCreateLobby = () => {
+  const userId = window.localStorage.getItem("userID");
 
-    if (LobbyID !== -1) {
-      const joinLobby = await axios.post(API_URL + `/lobby/join/${LobbyID}`, {
-        lobbyId: LobbyID,
-        userId: userID,
-      });
+  if (!userId) {
+    console.error("User ID not found in localStorage");
+    return;
+  }
 
-      console.log(`${userID} joined lobby ${LobbyID}`);
+  // Check for existing lobbies with less than 6 people
+  socket.emit("getLobby", (response) => {
+    if (response.status === 200) {
+      if (response.lobbyId !== -1) {
+        // Join the available lobby
+        const lobbyId = response.lobbyId;
+        socket.emit("joinLobby", { lobbyId, userId }, (joinLobbyResponse) => {
+          if (joinLobbyResponse.status === 200) {
+            window.localStorage.setItem("LobbyID", lobbyId);
+            navigate(`/lobby/${lobbyId}`);
+          } else {
+            console.error("Error joining lobby:", joinLobbyResponse.message);
+          }
+        });
+      } else {
+        // No available lobbies found, create a new one and join
+        socket.emit("createLobby", (createLobbyResponse) => {
+          if (createLobbyResponse.status === 201) {
+            const lobbyId = createLobbyResponse.lobbyId;
+            socket.emit(
+              "joinLobby",
+              { lobbyId, userId },
+              (joinLobbyResponse) => {
+                if (joinLobbyResponse.status === 200) {
+                  window.localStorage.setItem("LobbyID", lobbyId);
+                  navigate(`/lobby/${lobbyId}`);
+                } else {
+                  console.error(
+                    "Error joining lobby:",
+                    joinLobbyResponse.message
+                  );
+                }
+              }
+            );
+          } else {
+            console.error("Error creating lobby:", createLobbyResponse.message);
+          }
+        });
+      }
     } else {
-      const createLobbyResponse = await axios.post(API_URL + "/lobby/create");
-      const createdLobbyId = createLobbyResponse.data.lobbyId;
-      console.log(`${userID} created lobby ${createdLobbyId}`);
-
-      // join the newly created lobby
-      const joinLobby = await axios.post(
-        API_URL + `/lobby/join/${createdLobbyId}`,
-        {
-          lobbyId: createdLobbyId,
-          userId: userID,
-        }
-      );
-
-      // Update the current LobbyID
-      LobbyID = createdLobbyId;
+      console.error("Error getting lobby:", response.message);
     }
+  });
+};
 
-    window.localStorage.setItem("LobbyID", LobbyID);
-    navigate(`/lobby/${LobbyID}`);
-  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
@@ -73,7 +92,7 @@ const HomePage = () => {
           {/* TODO:  Add an onclick to add user to a lobby and navigate to the lobby*/}
           <button
             className="m-2 py-2 px-4 bg-white text-blue-600 font-semibold rounded-md"
-            onClick={handleClick}
+            onClick={handleCreateLobby}
           >
             Play
           </button>
