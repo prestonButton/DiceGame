@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Dice = ({ dots, scored }) => {
+const Dice = ({ dots, score }) => {
   const dotPositions = {
     1: [5],
     2: [1, 9],

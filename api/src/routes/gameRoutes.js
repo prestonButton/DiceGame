@@ -19,6 +19,63 @@ const gameHandlers = (io) => {
       }
     });
 
+    // Roll dice
+    socket.on("rollDice", async (gameId, callback) => {
+      try {
+        const game = await GameModel.findById(gameId);
+        if (!game) {
+          return callback({ status: 404, message: "Game not found" });
+        }
+
+        // Your logic for rolling dice and updating game state
+        const newRoll = game.lastRoll.map((diceValue, index) => {
+          // Check if the dice is held or not
+          const diceIsHeld = game.heldDice[index];
+
+          // If the dice is held, return the current value, otherwise generate a new random value
+          return diceIsHeld ? diceValue : Math.floor(Math.random() * 6) + 1;
+        });
+
+        game.lastRoll = newRoll;
+
+        await game.save();
+        io.to(gameId).emit("gameStateUpdate", game);
+        return callback({ status: 200, message: "Dice rolled successfully" });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error rolling dice",
+          error,
+        });
+      }
+    });
+
+
+    // Hold dice
+    socket.on("holdDice", async ({ gameId, diceIndex }, callback) => {
+      try {
+        const game = await GameModel.findById(gameId);
+        if (!game) {
+          return callback({ status: 404, message: "Game not found" });
+        }
+
+        // Your logic for holding dice and updating game state
+        // For example, you could use an array of boolean values representing the held status of each dice
+        game.heldDice[diceIndex] = !game.heldDice[diceIndex];
+
+        await game.save();
+        io.to(gameId).emit("gameStateUpdate", game);
+        return callback({ status: 200, message: "Dice held status updated successfully" });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error holding dice",
+          error,
+        });
+      }
+    });
+
+
     // Remove player from the game
     socket.on("leaveGame", async ({ gameId, userId }, callback) => {
       try {
