@@ -10,82 +10,83 @@ const Lobby = () => {
   const navigate = useNavigate();
   const [lobbyMembers, setLobbyMembers] = useState([]);
 
-useEffect(() => {
-  if (socket) {
+  useEffect(() => {
+    if (socket) {
+      const lobbyId = window.localStorage.getItem("LobbyID");
+
+      if (!lobbyId) {
+        console.error("Lobby ID not found in localStorage");
+        return;
+      }
+
+      socket.on("joinRoom", ({ lobbyId }) => {
+        socket.join(`lobby-${lobbyId}`);
+      });
+
+      socket.emit("getLobbyMembers", lobbyId, (response) => {
+        if (response.status === 200) {
+          console.log("Lobby members:", response.usernames);
+          setLobbyMembers(response.usernames);
+        } else {
+          console.error("Error fetching lobby members:", response.message);
+        }
+      });
+
+      socket.on("lobbyMembersUpdate", (members) => {
+        setLobbyMembers(members);
+      });
+
+      socket.on("gameStateUpdate", ({ gameId }) => {
+        window.localStorage.setItem("GameID", gameId);
+        navigate(`/game/${gameId}`);
+      });
+
+      return () => {
+        socket.off("lobbyMembersUpdate");
+        socket.off("gameStateUpdate");
+      };
+    }
+  }, [socket, navigate]);
+
+  const handleLeaveLobby = () => {
+    const userId = window.localStorage.getItem("userID");
     const lobbyId = window.localStorage.getItem("LobbyID");
 
+    if (!userId || !lobbyId) {
+      console.error("User ID or Lobby ID not found in localStorage");
+      return;
+    }
+
+    socket.emit("leaveLobby", { lobbyId, userId }, (response) => {
+      if (response.status === 200) {
+        console.log(response.message);
+        window.localStorage.removeItem("LobbyID");
+        navigate("/");
+      } else {
+        console.error("Error leaving lobby:", response.message, response.error);
+      }
+    });
+  };
+
+  const handleBeginGame = () => {
+    const lobbyId = window.localStorage.getItem("LobbyID");
     if (!lobbyId) {
       console.error("Lobby ID not found in localStorage");
       return;
     }
 
-    socket.emit("getLobbyMembers", lobbyId, (response) => {
-      if (response.status === 200) {
-        console.log("Lobby members:", response.usernames);
-        setLobbyMembers(response.usernames);
+    socket.emit("startGame", lobbyId, ({ status, message, gameId }) => {
+      if (status === 400) {
+        alert("Not enough players to start game");
+        return;
+      } else if (status === 200) {
+        window.localStorage.setItem("GameID", gameId);
+        navigate(`/game/${gameId}`);
       } else {
-        console.error("Error fetching lobby members:", response.message);
+        console.error("Error starting game:", message);
       }
     });
-
-    socket.on("lobbyMembersUpdate", (members) => {
-      setLobbyMembers(members);
-    });
-
-    socket.on("gameStateUpdate", ({ gameId }) => {
-      window.localStorage.setItem("GameID", gameId);
-      navigate(`/game/${gameId}`);
-    });
-
-    return () => {
-      socket.off("lobbyMembersUpdate");
-      socket.off("gameStateUpdate");
-    };
-  }
-}, [socket, navigate]);
-
-
-const handleLeaveLobby = () => {
-  const userId = window.localStorage.getItem("userID");
-  const lobbyId = window.localStorage.getItem("LobbyID");
-
-  if (!userId || !lobbyId) {
-    console.error("User ID or Lobby ID not found in localStorage");
-    return;
-  }
-
-  socket.emit("leaveLobby", { lobbyId, userId }, (response) => {
-    if (response.status === 200) {
-      console.log(response.message);
-      window.localStorage.removeItem("LobbyID");
-      navigate("/");
-    } else {
-      console.error("Error leaving lobby:", response.message, response.error);
-    }
-  });
-};
-
-
-const handleBeginGame = () => {
-  const lobbyId = window.localStorage.getItem("LobbyID");
-  if (!lobbyId) {
-    console.error("Lobby ID not found in localStorage");
-    return;
-  }
-
-  socket.emit("startGame", lobbyId, ({ status, message, gameId }) => {
-    if (status === 400) {
-      alert("Not enough players to start game");
-      return;
-    } else if (status === 200) {
-      window.localStorage.setItem("GameID", gameId);
-      navigate(`/game/${gameId}`);
-    } else {
-      console.error("Error starting game:", message);
-    }
-  });
-};
-
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 flex items-center justify-center text-white">
