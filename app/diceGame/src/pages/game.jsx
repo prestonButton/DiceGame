@@ -1,78 +1,67 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Dice from "../components/Dice.jsx";
 import UserCard from "../components/UserCard.jsx";
-import axios from "axios";
 import io from "socket.io-client";
 
 const Game = () => {
   const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const socket = io(API_URL);
   const navigate = useNavigate();
 
-  const [dice, setDice] = useState(Array(6).fill(1)); // Initial value of all dice set to 1
-  const [socket, setSocket] = useState(null);
-
-  // Replace the users array with a state variable that can be updated
-  const [users, setUsers] = useState([]);
+  const [gameState, setGameState] = useState(null);
 
   useEffect(() => {
-    const newSocket = io(API_URL);
-    setSocket(newSocket);
+    // Fetch initial game state
+    const gameId = window.localStorage.getItem("GameID");
+    socket.emit("getGameState", gameId, (response) => {
+      if (response.status === 200) {
+        setGameState(response.gameState);
+      } else {
+        console.error(response.message);
+      }
+    });
 
-    // TODO: Fetch initial users and dice state from the server
-    // setUsers(...)
-    // setDice(...)
+    // Listen for game state updates
+    socket.on("gameStateUpdate", (updatedGameState) => {
+      setGameState(updatedGameState);
+    });
 
-    return () => newSocket.close();
-  }, [API_URL]);
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const rollDice = () => {
-    if (!socket) return;
-    socket.emit(
-      "rollDice",
-      /* gameId, */ (response) => {
-        if (response.status === 200) {
-          setDice(response.game.lastRoll);
-        } else {
-          console.error(response.message);
-        }
-      }
-    );
-  };
-
-  const holdDice = (diceIndex) => {
-    if (!socket) return;
-    socket.emit("holdDice", { /* gameId, */ diceIndex }, (response) => {
-      if (response.status === 200) {
-        // TODO: Update dice holding status
-      } else {
+    const gameId = window.localStorage.getItem("GameID");
+    socket.emit("rollDice", gameId, (response) => {
+      if (response.status !== 200) {
         console.error(response.message);
       }
     });
   };
 
-const handleLeaveGame = () => {
-  if (!socket) return;
+  const holdDice = (diceIndex) => {
+    const gameId = window.localStorage.getItem("GameID");
+    socket.emit("holdDice", { gameId, diceIndex }, (response) => {
+      if (response.status !== 200) {
+        console.error(response.message);
+      }
+    });
+  };
 
-  const userId = window.localStorage.getItem("userID");
-  const gameId = window.localStorage.getItem("GameID");
-
-  if (!userId || !gameId) {
-    console.error("User ID or Game ID not found in localStorage");
-    return;
-  }
-
-  socket.emit("leaveGame", { gameId, userId }, (response) => {
-    if (response.status === 200) {
-      console.log(response.message);
-      window.localStorage.removeItem("GameID");
-      navigate("/");
-    } else {
-      console.error("Error leaving game:", response.message);
-    }
-  });
-};
-
+  const handleLeaveGame = () => {
+    const gameId = window.localStorage.getItem("GameID");
+    const userId = window.localStorage.getItem("UserID");
+    socket.emit("leaveGame", { gameId, userId }, (response) => {
+      if (response.status === 200) {
+        window.localStorage.removeItem("GameID");
+        navigate("/");
+      } else {
+        console.error(response.message);
+      }
+    });
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-blue-400 via-purple-600 to-pink-500 relative">
