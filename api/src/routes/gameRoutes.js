@@ -77,6 +77,7 @@ const gameHandlers = (io) => {
 
 
     // Remove player from the game
+    // Remove player from the game
     socket.on("leaveGame", async ({ gameId, userId }, callback) => {
       try {
         const game = await GameModel.findById(gameId);
@@ -89,18 +90,13 @@ const gameHandlers = (io) => {
           (player) => player.user_id.toString() !== userId
         );
 
-        // Emit the game state update
-        const lobbyId = game.lobby_id;
-        const gameState = game.game_state;
-        io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
-          gameState,
-          gameId,
-        });
-
         game.game_state.players = updatedPlayers;
 
         // Save the updated game state
         await game.save();
+
+        // Emit the game state update to all users in the game
+        io.to(gameId).emit("gameStateUpdate", game);
 
         return callback({
           status: 200,
