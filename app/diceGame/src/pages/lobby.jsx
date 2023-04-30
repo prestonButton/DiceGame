@@ -1,50 +1,90 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../tailwind.css";
 import UserCard from "../components/UserCard";
 import axios from "axios";
+import socket from "../socket";
 
 const Lobby = () => {
   const API_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
+  const [lobbyMembers, setLobbyMembers] = useState([]);
 
-  const handleLeaveLobby = async () => {
-    const userId = window.localStorage.getItem("userID");
+useEffect(() => {
+  if (socket) {
     const lobbyId = window.localStorage.getItem("LobbyID");
 
-    if (!userId || !lobbyId) {
-      console.error("User ID or Lobby ID not found in localStorage");
+    if (!lobbyId) {
+      console.error("Lobby ID not found in localStorage");
       return;
     }
 
-    try {
-      const response = await axios.delete(`${API_URL}/lobby/leave/${lobbyId}`, {
-        data: { userId },
-      });
+    socket.emit("getLobbyMembers", lobbyId, (response) => {
+      if (response.status === 200) {
+        console.log("Lobby members:", response.usernames);
+        setLobbyMembers(response.usernames);
+      } else {
+        console.error("Error fetching lobby members:", response.message);
+      }
+    });
 
-      console.log(response.data.message);
+    socket.on("lobbyMembersUpdate", (members) => {
+      setLobbyMembers(members);
+    });
+
+    socket.on("gameStateUpdate", ({ gameId }) => {
+      window.localStorage.setItem("GameID", gameId);
+      navigate(`/game/${gameId}`);
+    });
+
+    return () => {
+      socket.off("lobbyMembersUpdate");
+      socket.off("gameStateUpdate");
+    };
+  }
+}, [socket, navigate]);
+
+
+const handleLeaveLobby = () => {
+  const userId = window.localStorage.getItem("userID");
+  const lobbyId = window.localStorage.getItem("LobbyID");
+
+  if (!userId || !lobbyId) {
+    console.error("User ID or Lobby ID not found in localStorage");
+    return;
+  }
+
+  socket.emit("leaveLobby", { lobbyId, userId }, (response) => {
+    if (response.status === 200) {
+      console.log(response.message);
       window.localStorage.removeItem("LobbyID");
       navigate("/");
-    } catch (error) {
-      console.error(
-        "Error leaving lobby:",
-        error.response?.data?.message || error.message
-      );
+    } else {
+      console.error("Error leaving lobby:", response.message, response.error);
     }
+  });
+};
+
+
+const handleBeginGame = () => {
+  const lobbyId = window.localStorage.getItem("LobbyID");
+  if (!lobbyId) {
+    console.error("Lobby ID not found in localStorage");
+    return;
   }
 
-  const handleBeginGame = async () => {
-    const lobbyId = window.localStorage.getItem("LobbyID");
-    const response = await axios.post(`${API_URL}/lobby/start/${lobbyId}`);
-    if(res == 400) {
-      alert('Not enough players to start game');
+  socket.emit("startGame", lobbyId, ({ status, message, gameId }) => {
+    if (status === 400) {
+      alert("Not enough players to start game");
       return;
+    } else if (status === 200) {
+      window.localStorage.setItem("GameID", gameId);
+      navigate(`/game/${gameId}`);
+    } else {
+      console.error("Error starting game:", message);
     }
-    const gameId = response.data.gameId;
-    window.localStorage.setItem("GameID", gameId);
-    navigate(`/game/${gameId}`)
-  }
-
+  });
+};
 
 
   return (
@@ -57,12 +97,9 @@ const Lobby = () => {
           Leave Lobby
         </button>
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <UserCard name="Tom Brady" />
-          <UserCard name="LeBum James" />
-          <UserCard name="Lionel Messi" />
-          <UserCard name="Christiano Ronaldo" />
-          <UserCard name="Aaron Judge" />
-          <UserCard name="Connor McGregor" />
+          {lobbyMembers.map((username, index) => (
+            <UserCard key={index} name={username} />
+          ))}
         </div>
         <button
           onClick={handleBeginGame}

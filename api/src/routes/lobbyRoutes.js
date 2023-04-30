@@ -1,4 +1,6 @@
 import { LobbyModel } from "../models/Lobby.js";
+import  { UserModel } from '../models/User.js';
+
 // import { GameModel } from "../models/game.js"; // Uncomment this import when you have a Game model
 
 const lobbyHandlers = (io) => {
@@ -62,16 +64,55 @@ const lobbyHandlers = (io) => {
           return callback({ status: 400, message: "Cannot join this lobby" });
         }
 
+        const user = await UserModel.findById(userId);
+        if (!user) {
+          return callback({ status: 404, message: "User not found" });
+        }
+
         lobby.players.push(userId);
         await lobby.save();
+
+        // Join the lobby room
+        socket.join(lobbyId);
+
+        // Get the updated list of players with usernames
+        const updatedLobby = await LobbyModel.findById(lobbyId).populate("players");
+        const usernames = updatedLobby.players.map((player) => player.username);
+
+        // Emit the lobbyMembersUpdate event to all users in the lobby
+        io.to(lobbyId).emit("lobbyMembersUpdate", usernames);
+
         return callback({
           status: 200,
           message: "Player successfully joined the lobby",
         });
       } catch (error) {
+        console.error("Error joining lobby:", error);
         return callback({ status: 500, message: "Error joining lobby", error });
       }
+
     });
+
+
+    // Get lobby members
+    socket.on("getLobbyMembers", async (lobbyId, callback) => {
+      try {
+        const lobby = await LobbyModel.findById(lobbyId).populate("players");
+        if (!lobby) {
+          return callback({ status: 404, message: "Lobby not found" });
+        }
+        const usernames = lobby.players.map((player) => player.username);
+        return callback({ status: 200, usernames });
+      } catch (error) {
+        console.log('Error in getLobbyMembers:', error);
+        return callback({
+          status: 500,
+          message: "Error fetching lobby members",
+          error,
+        });
+      }
+    });
+
 
     // Start a new game
     socket.on("startGame", async (lobbyId, callback) => {
@@ -119,7 +160,7 @@ const lobbyHandlers = (io) => {
       }
     });
 
-    // Leave a lobby/game
+    // Leave a lobby
     socket.on("leaveLobby", async ({ lobbyId, userId }, callback) => {
       try {
         const lobby = await LobbyModel.findById(lobbyId);
@@ -175,6 +216,13 @@ const lobbyHandlers = (io) => {
           }
         }
 
+        // Get the updated list of players with usernames
+        const updatedLobby = await LobbyModel.findById(lobbyId).populate("players");
+        const usernames = updatedLobby.players.map((player) => player.username);
+
+        // Emit the lobbyMembersUpdate event to all users in the lobby
+        io.to(lobbyId).emit("lobbyMembersUpdate", usernames);
+
         // Update the lobby status if all players have left
         if (lobby.players.length === 0) {
           lobby.game_started = false;
@@ -187,9 +235,11 @@ const lobbyHandlers = (io) => {
           message: "Player successfully left the lobby",
         });
       } catch (error) {
+        console.error("Error leaving lobby:", error);
         return callback({ status: 500, message: "Error leaving lobby", error });
       }
     });
+
   });
 };
 
