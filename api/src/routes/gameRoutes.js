@@ -50,7 +50,6 @@ const gameHandlers = (io) => {
       }
     });
 
-
     // Hold dice
     socket.on("holdDice", async ({ gameId, diceIndex }, callback) => {
       try {
@@ -60,7 +59,6 @@ const gameHandlers = (io) => {
         }
 
         // Your logic for holding dice and updating game state
-        // For example, you could use an array of boolean values representing the held status of each dice
         game.heldDice[diceIndex] = !game.heldDice[diceIndex];
 
         await game.save();
@@ -75,8 +73,29 @@ const gameHandlers = (io) => {
       }
     });
 
+    // Change turn
+    socket.on("changeTurn", async (gameId, callback) => {
+      try {
+        const game = await GameModel.findById(gameId);
+        if (!game) {
+          return callback({ status: 404, message: "Game not found" });
+        }
 
-    // Remove player from the game
+        // Your logic for changing the active player's turn and updating game state
+        // For example, you could iterate through the players array and set the next player as active
+
+        await game.save();
+        io.to(gameId).emit("gameStateUpdate", game);
+        return callback({ status: 200, message: "Turn changed successfully" });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error changing turn",
+          error,
+        });
+      }
+    });
+
     // Remove player from the game
     socket.on("leaveGame", async ({ gameId, userId }, callback) => {
       try {
@@ -90,13 +109,18 @@ const gameHandlers = (io) => {
           (player) => player.user_id.toString() !== userId
         );
 
+        // Emit the game state update
+        const lobbyId = game.lobby_id;
+        const gameState = game.game_state;
+        io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
+          gameState,
+          gameId,
+        });
+
         game.game_state.players = updatedPlayers;
 
         // Save the updated game state
         await game.save();
-
-        // Emit the game state update to all users in the game
-        io.to(gameId).emit("gameStateUpdate", game);
 
         return callback({
           status: 200,
