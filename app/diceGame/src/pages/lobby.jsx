@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../tailwind.css";
 import UserCard from "../components/UserCard";
-import axios from "axios";
 import socket from "../socket";
 
 const Lobby = () => {

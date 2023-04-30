@@ -182,46 +182,18 @@ const lobbyHandlers = (io) => {
           });
         }
 
+        // Leave the socket room
+        socket.leave(lobbyId);
+
         // Remove player from the lobby
         lobby.players.splice(playerIndex, 1);
-
-        if (lobby.game_started) {
-          const game = await GameModel.findOne({ lobby_id: lobbyId });
-
-          if (game) {
-            // Remove player from game state players list
-            const gameStatePlayers = game.game_state.players;
-            const gamePlayerIndex = gameStatePlayers.findIndex(
-              (player) => player.user_id.toString() === userId
-            );
-
-            if (gamePlayerIndex !== -1) {
-              gameStatePlayers.splice(gamePlayerIndex, 1);
-            }
-
-            // Optional: End the game if only one player left
-            if (gameStatePlayers.length === 1) {
-              game.end_time = new Date();
-              game.game_status = "finished";
-            }
-
-            await game.save();
-
-            // Emit the game state update
-            const gameState = game.game_state;
-            io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
-              gameState,
-              gameId: game._id,
-            });
-          }
-        }
 
         // Get the updated list of players with usernames
         const updatedLobby = await LobbyModel.findById(lobbyId).populate("players");
         const usernames = updatedLobby.players.map((player) => player.username);
 
         // Emit the lobbyMembersUpdate event to all users in the lobby
-        io.to(lobbyId).emit("lobbyMembersUpdate", usernames);
+        io.to(`lobby-${lobbyId}`).emit("lobbyMembersUpdate", usernames);
 
         // Update the lobby status if all players have left
         if (lobby.players.length === 0) {
@@ -239,6 +211,7 @@ const lobbyHandlers = (io) => {
         return callback({ status: 500, message: "Error leaving lobby", error });
       }
     });
+
 
   });
 };
