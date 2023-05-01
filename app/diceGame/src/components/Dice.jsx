@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const Dice = ({ dots, scored }) => {
+const Dice = (props) => {
   const dotPositions = {
     1: [5],
     2: [1, 9],
@@ -15,13 +15,12 @@ const Dice = ({ dots, scored }) => {
     <div className="w-20 h-20">
       <div
         // if scored = true, add bg-green-500, else add bg-white
-        className={`w-full h-full rounded-lg border border-black grid grid-cols-3 grid-rows-3 gap-1 p-3 ${
-          scored ? "bg-green-500" : "bg-white"
-        }`}
+        className={`w-full h-full rounded-lg border bg-white border-black grid grid-cols-3 grid-rows-3 gap-1 p-3
+        `}
       >
         {[...Array(9)].map((_, idx) => (
           <div key={idx} className="flex items-center justify-center">
-            {dotPositions[dots].includes(idx + 1) && (
+            {dotPositions[props.dots].includes(idx + 1) && (
               <span className="w-3 h-3 bg-black rounded-full"></span>
             )}
           </div>
@@ -33,7 +32,6 @@ const Dice = ({ dots, scored }) => {
 
 Dice.propTypes = {
   dots: PropTypes.oneOf([1, 2, 3, 4, 5, 6]).isRequired,
-  scored: PropTypes.bool,
 };
 
 export default Dice;

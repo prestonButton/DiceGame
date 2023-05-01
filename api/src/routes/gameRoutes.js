@@ -21,7 +21,6 @@ const gameHandlers = (io) => {
     });
 
     // Roll dice
-    // Roll dice
     socket.on("rollDice", async (gameId, callback) => {
       try {
         const game = await GameModel.findById(gameId);
@@ -41,9 +40,11 @@ const gameHandlers = (io) => {
         game.dice = newRoll;
 
         await game.save();
-        console.log("Emitted gameStateUpdate:", game); // Add this line
-        io.to(gameId).emit("gameStateUpdate", { game } );
-        return callback({ status: 200, message: "Dice rolled successfully" });
+        // In the rollDice event in the backend
+        await game.save();
+        io.to(gameId).emit("gameStateUpdate", game);
+        return callback({ status: 200, message: "Dice rolled successfully", dice: game.dice });
+
       } catch (error) {
         return callback({
           status: 500,
@@ -52,8 +53,6 @@ const gameHandlers = (io) => {
         });
       }
     });
-
-
 
     // Hold dice
     socket.on("holdDice", async ({ gameId, diceIndex }, callback) => {
