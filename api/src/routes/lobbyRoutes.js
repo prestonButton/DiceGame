@@ -135,6 +135,7 @@ const lobbyHandlers = (io) => {
             playerId,
             score: 0,
           })),
+          dice: [1, 1, 1, 1, 1, 1],
         });
         await game.save();
         console.log("Created game document:", game);
