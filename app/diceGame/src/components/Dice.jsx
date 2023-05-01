@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 const Dice = (props) => {
+  const { dots, isHeld = false, onClick } = props;
   const dotPositions = {
     1: [5],
     2: [1, 9],
@@ -11,16 +12,17 @@ const Dice = (props) => {
     6: [1, 3, 4, 6, 7, 9],
   };
 
+  const backgroundColor = isHeld ? "bg-green-500" : "bg-white";
+
   return (
     <div className="w-20 h-20">
       <div
-        // if scored = true, add bg-green-500, else add bg-white
-        className={`w-full h-full rounded-lg border bg-white border-black grid grid-cols-3 grid-rows-3 gap-1 p-3
-        `}
+        onClick={onClick}
+        className={`w-full h-full rounded-lg border ${backgroundColor} border-black grid grid-cols-3 grid-rows-3 gap-1 p-3`}
       >
         {[...Array(9)].map((_, idx) => (
           <div key={idx} className="flex items-center justify-center">
-            {dotPositions[props.dots].includes(idx + 1) && (
+            {dotPositions[dots].includes(idx + 1) && (
               <span className="w-3 h-3 bg-black rounded-full"></span>
             )}
           </div>
@@ -32,6 +34,8 @@ const Dice = (props) => {
 
 Dice.propTypes = {
   dots: PropTypes.oneOf([1, 2, 3, 4, 5, 6]).isRequired,
+  isHeld: PropTypes.bool,
+  onClick: PropTypes.func,
 };
 
 export default Dice;

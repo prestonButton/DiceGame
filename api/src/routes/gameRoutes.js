@@ -20,7 +20,6 @@ const gameHandlers = (io) => {
       }
     });
 
-    // Roll dice
     socket.on("rollDice", async (gameId, callback) => {
       try {
         const game = await GameModel.findById(gameId);
@@ -42,7 +41,8 @@ const gameHandlers = (io) => {
         await game.save();
         // In the rollDice event in the backend
         await game.save();
-        io.to(gameId).emit("gameStateUpdate", game);
+        console.log("Emitting gameStateUpdate event:", game); // Add this console log
+        io.to(gameId).emit("gameStateUpdate", { game: game.toObject() });
         return callback({ status: 200, message: "Dice rolled successfully", dice: game.dice });
 
       } catch (error) {
@@ -66,7 +66,7 @@ const gameHandlers = (io) => {
         game.heldDice[diceIndex] = !game.heldDice[diceIndex];
 
         await game.save();
-        io.to(gameId).emit("gameStateUpdate",{ game });
+        io.emit("gameStateUpdate",{ game });
         return callback({ status: 200, message: "Dice held status updated successfully" });
       } catch (error) {
         return callback({
@@ -89,7 +89,7 @@ const gameHandlers = (io) => {
         // For example, you could iterate through the players array and set the next player as active
 
         await game.save();
-        io.to(gameId).emit("gameStateUpdate", game);
+        io.emit("gameStateUpdate", game);
         return callback({ status: 200, message: "Turn changed successfully" });
       } catch (error) {
         return callback({
@@ -160,6 +160,13 @@ const gameHandlers = (io) => {
         });
       }
     });
+
+    // join room
+    socket.on("joinRoom", (gameId) => {
+      socket.join(gameId);
+      console.log(`User ${socket.id} joined the room ${gameId}`);
+    });
+
   });
 };
 
