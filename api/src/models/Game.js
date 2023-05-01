@@ -34,6 +34,11 @@ const GameSchema = new mongoose.Schema({
     default: 0,
   },
   lastRoll: [Number],
+  dice: {
+    type: [Number],
+    default: Array(6).fill(1),
+  },
+
   heldDice: {
     type: [Boolean],
     default: Array(6).fill(false),

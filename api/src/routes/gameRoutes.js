@@ -9,11 +9,12 @@ const gameHandlers = (io) => {
         if (!game) {
           return callback({ status: 404, message: "Game not found" });
         }
-        return callback({ status: 200, gameState: game.game_state });
+        // Return the game document in the callback
+        callback({ status: 200, game });
       } catch (error) {
         return callback({
           status: 500,
-          message: "Error retrieving game state",
+          message: "Error getting game state",
           error,
         });
       }
@@ -39,6 +40,7 @@ const gameHandlers = (io) => {
         game.lastRoll = newRoll;
 
         await game.save();
+        console.log("Emitted gameStateUpdate:", game); // Add this line
         io.to(gameId).emit("gameStateUpdate", game);
         return callback({ status: 200, message: "Dice rolled successfully" });
       } catch (error) {
@@ -49,6 +51,7 @@ const gameHandlers = (io) => {
         });
       }
     });
+
 
     // Hold dice
     socket.on("holdDice", async ({ gameId, diceIndex }, callback) => {
