@@ -39,12 +39,20 @@ const gameHandlers = (io) => {
         game.dice = newRoll;
 
         await game.save();
-        // In the rollDice event in the backend
-        await game.save();
-        console.log("Emitting gameStateUpdate event:", game); // Add this console log
-        io.to(gameId).emit("gameStateUpdate", { game: game.toObject() });
-        return callback({ status: 200, message: "Dice rolled successfully", dice: game.dice });
-
+         io.to(gameId).emit("gameStateUpdate", {
+           game: {
+             _id: game._id,
+             players: game.players,
+             scores: game.scores,
+             gameStatus: game.gameStatus,
+             round: game.round,
+             turnScore: game.turnScore,
+             dice: game.dice,
+             heldDice: game.heldDice,
+             currentPlayerID: game.currentPlayerID, // Make sure this is included
+           },
+         });
+         return callback({ status: 200, message: "Dice rolled successfully", dice: game.dice });
       } catch (error) {
         return callback({
           status: 500,
@@ -135,31 +143,27 @@ const gameHandlers = (io) => {
     socket.on("getGameMembers", async (gameId, callback) => {
       try {
         const game = await GameModel.findById(gameId).populate("players");
+
         if (!game) {
-          return callback({
-            status: 404,
-            message: "Game not found",
-          });
+          return callback({ status: 404, message: "Game not found" });
         }
 
-        const members = game.scores.map((scoreEntry) => ({
-          playerId: scoreEntry.playerId,
-          username: game.players.find((player) => player._id.equals(scoreEntry.playerId)).username,
-          score: scoreEntry.score,
+        const members = game.players.map((player) => ({
+          _id: player._id,
+          username: player.username,
+          score: player.score,
         }));
 
-        return callback({
-          status: 200,
-          members,
-        });
+        return callback({ status: 200, members });
       } catch (error) {
         return callback({
           status: 500,
-          message: "Error fetching game members",
+          message: "Error getting game members",
           error,
         });
       }
     });
+
 
     // join room
     socket.on("joinRoom", (gameId) => {

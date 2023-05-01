@@ -40,6 +40,7 @@ useEffect(() => {
     if (response.status === 200) {
       setUsers(
         response.members.map((member) => ({
+          _id: member._id, // Add the _id property
           name: member.username,
           score: member.score,
         }))
@@ -48,6 +49,13 @@ useEffect(() => {
       console.error(response.message);
     }
   });
+ socketInstance.on("gameStateUpdate", (data) => {
+   console.log("Received gameStateUpdate:", data.game);
+   setGameState(data.game);
+   setDice(data.game.dice);
+   setHeldDice(data.game.heldDice);
+ });
+
 
   socketInstance.on("gameStateUpdate", (data) => {
     const { game } = data;
@@ -155,9 +163,24 @@ const holdDice = (diceIndex) => {
 
       <div className="flex flex-col items-center justify-center pt-16">
         <div className="grid grid-cols-3 gap-4 mb-8">
-          {users.map((user, idx) => (
-            <UserCard key={idx} name={user.name} score={user.score} />
-          ))}
+          {users.map((user, index) => {
+            console.log(
+              "Rendering UserCard, user._id:",
+              user._id,
+              "gameState.currentPlayerID:",
+              gameState && gameState.currentPlayerID
+            ); // Add this line
+            return (
+              <UserCard
+                key={index}
+                name={user.name}
+                score={user.score}
+                currentPlayer={
+                  gameState && user._id === gameState.currentPlayerID
+                }
+              />
+            );
+          })}
         </div>
 
         <div className="flex flex-wrap justify-center gap-4" key={diceKey}>

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 
 const UserCard = (props) => {
-  const { name, score = 0 } = props;
+  const { name, score = 0, currentPlayer } = props;
+  console.log("UserCard currentPlayer:", currentPlayer); // Add this line
   const location = useLocation();
 
   const [color, setColor] = useState(
@@ -11,8 +12,15 @@ const UserCard = (props) => {
 
   const shouldDisplayScore = location.pathname.startsWith("/game/");
 
+  const cardStyle = currentPlayer
+    ? { borderColor: "white", borderWidth: "3px" }
+    : {};
+
   return (
-    <div className="userCard-container h-56 w-48 rounded-lg flex flex-col items-center justify-evenly text-white shadow-2xl p-4 pt-8">
+    <div
+      className="userCard-container h-56 w-48 rounded-lg flex flex-col items-center justify-evenly text-white shadow-2xl p-4 pt-8"
+      style={cardStyle}
+    >
       <div
         className="rounded-full"
         style={{
