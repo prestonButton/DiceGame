@@ -6,12 +6,15 @@ import io from "socket.io-client";
 
 const Game = () => {
   const API_URL = import.meta.env.VITE_API_BASE_URL;
-  const socket = io(API_URL);
+
   const navigate = useNavigate();
 
   const [gameState, setGameState] = useState(null);
+  const [dice, setDice] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
+    const socket = io(API_URL);
     // Fetch initial game state
     const gameId = window.localStorage.getItem("GameID");
     socket.emit("getGameState", gameId, (response) => {
@@ -22,9 +25,24 @@ const Game = () => {
       }
     });
 
+    // Fetch game members
+    socket.emit("getGameMembers", gameId, (response) => {
+      if (response.status === 200) {
+        setUsers(
+          response.members.map((member) => ({
+            name: member.username,
+            score: member.score,
+          }))
+        );
+      } else {
+        console.error(response.message);
+      }
+    });
+
     // Listen for game state updates
-    socket.on("gameStateUpdate", (updatedGameState) => {
-      setGameState(updatedGameState);
+    socket.on("gameStateUpdate", ({ gameState }) => {
+      setGameState(gameState);
+      setDice(gameState.lastRoll);
     });
 
     return () => {

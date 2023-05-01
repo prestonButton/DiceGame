@@ -1,7 +1,6 @@
 import { LobbyModel } from "../models/Lobby.js";
 import  { UserModel } from '../models/User.js';
-
-// import { GameModel } from "../models/game.js"; // Uncomment this import when you have a Game model
+import GameModel from '../models/Game.js';
 
 const lobbyHandlers = (io) => {
   io.on("connection", (socket) => {
@@ -128,29 +127,29 @@ const lobbyHandlers = (io) => {
         lobby.game_started = true;
         await lobby.save();
 
+        console.log("Adding players to the game:", lobby.players);
+
         const game = new GameModel({
-          lobby_id: lobbyId,
-          game_state: {
-            players: lobby.players.map((playerId) => ({
-              user_id: playerId,
-              score: 0,
-            })),
-          },
+          players: lobby.players,
+          scores: lobby.players.map((playerId) => ({
+            playerId,
+            score: 0,
+          })),
         });
         await game.save();
+        console.log("Created game document:", game);
 
         // Emit the game state update
-        const gameState = game.game_state;
-        io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
-          gameState,
+        io.to(lobbyId).emit("gameStateUpdate", {
+          gameState: game,
           gameId: game._id,
         });
 
-        return callback({
-          status: 200,
-          message: "Game started",
+        // Emit the startGameSuccess event to all users in the lobby
+        io.to(lobbyId).emit("startGameSuccess", {
           gameId: game._id,
         });
+
       } catch (error) {
         return callback({
           status: 500,
@@ -159,6 +158,7 @@ const lobbyHandlers = (io) => {
         });
       }
     });
+
 
     // Leave a lobby
     socket.on("leaveLobby", async ({ lobbyId, userId }, callback) => {
@@ -173,7 +173,7 @@ const lobbyHandlers = (io) => {
         const playerIndex = lobby.players.findIndex(
           (id) => id.toString() === userId
         );
-        console.log(playerIndex);
+        console.log('PlayerIndex: ' + playerIndex);
 
         if (playerIndex === -1) {
           return callback({

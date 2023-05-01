@@ -9,43 +9,42 @@ const Lobby = () => {
   const navigate = useNavigate();
   const [lobbyMembers, setLobbyMembers] = useState([]);
 
-  useEffect(() => {
-    if (socket) {
-      const lobbyId = window.localStorage.getItem("LobbyID");
+useEffect(() => {
+  if (socket) {
+    const lobbyId = window.localStorage.getItem("LobbyID");
 
-      if (!lobbyId) {
-        console.error("Lobby ID not found in localStorage");
-        return;
-      }
-
-      socket.on("joinRoom", ({ lobbyId }) => {
-        socket.join(`lobby-${lobbyId}`);
-      });
-
-      socket.emit("getLobbyMembers", lobbyId, (response) => {
-        if (response.status === 200) {
-          console.log("Lobby members:", response.usernames);
-          setLobbyMembers(response.usernames);
-        } else {
-          console.error("Error fetching lobby members:", response.message);
-        }
-      });
-
-      socket.on("lobbyMembersUpdate", (members) => {
-        setLobbyMembers(members);
-      });
-
-      socket.on("gameStateUpdate", ({ gameId }) => {
-        window.localStorage.setItem("GameID", gameId);
-        navigate(`/game/${gameId}`);
-      });
-
-      return () => {
-        socket.off("lobbyMembersUpdate");
-        socket.off("gameStateUpdate");
-      };
+    if (!lobbyId) {
+      console.error("Lobby ID not found in localStorage");
+      return;
     }
-  }, [socket, navigate]);
+
+    socket.emit("joinRoom", lobbyId);
+
+    socket.emit("getLobbyMembers", lobbyId, (response) => {
+      if (response.status === 200) {
+        console.log("Lobby members:", response.usernames);
+        setLobbyMembers(response.usernames);
+      } else {
+        console.error("Error fetching lobby members:", response.message);
+      }
+    });
+
+    socket.on("lobbyMembersUpdate", (members) => {
+      setLobbyMembers(members);
+    });
+
+    socket.on("startGameSuccess", ({ gameId }) => {
+      window.localStorage.setItem("GameID", gameId);
+      navigate(`/game/${gameId}`);
+    });
+
+    return () => {
+      socket.off("lobbyMembersUpdate");
+      socket.off("startGameSuccess");
+    };
+  }
+}, [socket, navigate]);
+
 
   const handleLeaveLobby = () => {
     const userId = window.localStorage.getItem("userID");

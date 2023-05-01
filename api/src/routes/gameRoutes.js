@@ -104,32 +104,54 @@ const gameHandlers = (io) => {
           return callback({ status: 404, message: "Game not found" });
         }
 
-        // Remove player from the game state
-        const updatedPlayers = game.game_state.players.filter(
-          (player) => player.user_id.toString() !== userId
-        );
+        // Remove the player from the game
+        game.players = game.players.filter((playerId) => playerId.toString() !== userId);
+        game.scores = game.scores.filter((scoreEntry) => scoreEntry.playerId.toString() !== userId);
 
-        // Emit the game state update
-        const lobbyId = game.lobby_id;
-        const gameState = game.game_state;
-        io.to(`lobby-${lobbyId}`).emit("gameStateUpdate", {
-          gameState,
-          gameId,
+        // Save the updated game document
+        await game.save();
+
+        // Emit the game state update to remaining players in the game room
+        io.to(gameId).emit("gameStateUpdate", {
+          gameState: game,
+          gameId: gameId,
         });
 
-        game.game_state.players = updatedPlayers;
+        return callback({ status: 200, message: "Successfully left the game" });
+      } catch (error) {
+        return callback({
+          status: 500,
+          message: "Error leaving game",
+          error,
+        });
+      }
+    });
 
-        // Save the updated game state
-        await game.save();
+    //get game members and scores
+    socket.on("getGameMembers", async (gameId, callback) => {
+      try {
+        const game = await GameModel.findById(gameId).populate("players");
+        if (!game) {
+          return callback({
+            status: 404,
+            message: "Game not found",
+          });
+        }
+
+        const members = game.scores.map((scoreEntry) => ({
+          playerId: scoreEntry.playerId,
+          username: game.players.find((player) => player._id.equals(scoreEntry.playerId)).username,
+          score: scoreEntry.score,
+        }));
 
         return callback({
           status: 200,
-          message: "Player removed from the game",
+          members,
         });
       } catch (error) {
         return callback({
           status: 500,
-          message: "Error while removing player from the game",
+          message: "Error fetching game members",
           error,
         });
       }

@@ -9,6 +9,8 @@ const UserCard = (props) => {
     "#" + Math.floor(Math.random() * 16777215).toString(16)
   );
 
+  const shouldDisplayScore = location.pathname.startsWith("/game/");
+
   return (
     <div className="userCard-container h-56 w-48 rounded-lg flex flex-col items-center justify-evenly text-white shadow-2xl p-4 pt-8">
       <div
@@ -27,9 +29,7 @@ const UserCard = (props) => {
         {name.charAt(0).toUpperCase()}
       </div>
       <p className="text-lg font-semibold">{name}</p>
-      {location.pathname === "/game" && (
-        <p className="score text-base">Score: {score}</p>
-      )}
+      {shouldDisplayScore && <p className="score text-base">Score: {score}</p>}
     </div>
   );
 };
