@@ -15,6 +15,8 @@ const Game = () => {
   const [users, setUsers] = useState([]);
   const [socket, setSocket] = useState(null);
   const [diceKey, setDiceKey] = useState(0);
+  const [turnScore, setTurnScore] = useState(0);
+
 
 useEffect(() => {
   const socketInstance = io(API_URL);
@@ -80,8 +82,43 @@ const rollDice = () => {
   });
 };
 
+const canScore = (diceValue) => {
+  // Returns true if the dice value is 5 or 1, false otherwise
+  return diceValue === 5 || diceValue === 1;
+};
+
+const getScore = (diceValue) => {
+  if (diceValue === 1) {
+    return 100;
+  } else if (diceValue === 5) {
+    return 50;
+  } else {
+    return 0;
+  }
+};
+
 
 const holdDice = (diceIndex) => {
+  // Check if the dice at the given index can score points
+  if (!canScore(dice[diceIndex])) {
+    console.log("Cannot hold this dice because it doesn't score points");
+    return;
+  }
+
+  // Update the turn score based on the held dice value
+  const newTurnScore = turnScore + getScore(dice[diceIndex]);
+  console.log("New turn score:", newTurnScore)
+  setTurnScore(newTurnScore);
+
+  // Check if all dice are held
+  const allDiceHeld = heldDice.every((isHeld) => isHeld);
+
+  if (allDiceHeld) {
+    // Reset the isHeld array to all be false
+    const newHeldDice = heldDice.map(() => false);
+    setHeldDice(newHeldDice);
+  }
+
   if (!socket) return;
   const gameId = window.localStorage.getItem("GameID");
   socket.emit("holdDice", { gameId, diceIndex }, (response) => {
@@ -90,6 +127,7 @@ const holdDice = (diceIndex) => {
     }
   });
 };
+
 
   const handleLeaveGame = () => {
     if (!socket) return;
