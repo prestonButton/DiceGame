@@ -45,8 +45,8 @@ const Game = () => {
 
    socketInstance.on("gameStateUpdate", ({ gameState }) => {
      console.log("Received gameStateUpdate:", gameState);
-     setGameState(gameState);
-     setDice(gameState.dice);
+     setGameState((prevGameState) => gameState);
+     setDice((prevDice) => gameState.dice);
      console.log("Dice:", gameState.dice); 
    });
 

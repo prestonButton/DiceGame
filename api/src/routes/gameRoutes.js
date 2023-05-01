@@ -21,6 +21,7 @@ const gameHandlers = (io) => {
     });
 
     // Roll dice
+    // Roll dice
     socket.on("rollDice", async (gameId, callback) => {
       try {
         const game = await GameModel.findById(gameId);
@@ -29,7 +30,7 @@ const gameHandlers = (io) => {
         }
 
         // Your logic for rolling dice and updating game state
-        const newRoll = game.lastRoll.map((diceValue, index) => {
+        const newRoll = game.dice.map((diceValue, index) => {
           // Check if the dice is held or not
           const diceIsHeld = game.heldDice[index];
 
@@ -37,11 +38,11 @@ const gameHandlers = (io) => {
           return diceIsHeld ? diceValue : Math.floor(Math.random() * 6) + 1;
         });
 
-        game.lastRoll = newRoll;
+        game.dice = newRoll;
 
         await game.save();
         console.log("Emitted gameStateUpdate:", game); // Add this line
-        io.to(gameId).emit("gameStateUpdate", game);
+        io.to(gameId).emit("gameStateUpdate", { game } );
         return callback({ status: 200, message: "Dice rolled successfully" });
       } catch (error) {
         return callback({
@@ -51,6 +52,7 @@ const gameHandlers = (io) => {
         });
       }
     });
+
 
 
     // Hold dice
@@ -65,7 +67,7 @@ const gameHandlers = (io) => {
         game.heldDice[diceIndex] = !game.heldDice[diceIndex];
 
         await game.save();
-        io.to(gameId).emit("gameStateUpdate", game);
+        io.to(gameId).emit("gameStateUpdate",{ game });
         return callback({ status: 200, message: "Dice held status updated successfully" });
       } catch (error) {
         return callback({
