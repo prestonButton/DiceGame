@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 import { Link, useNavigate } from "react-router-dom";
 import SpinningDice from "../components/SpinningDice";
-import axios from "axios";
 import socket from "../socket"; // Import the socket instance
 import Modal from "../components/RulesModal.jsx"
 
